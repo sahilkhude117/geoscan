@@ -1,0 +1,11 @@
+services:
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.28.2
+    ports:
+      # Expose the learning lab only on this machine.
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - geoserver_data:/opt/geoserver_data
+
+volumes:
+  geoserver_data:

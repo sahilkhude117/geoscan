@@ -1,0 +1,13 @@
+[workspace]
+members = ["crates/geoscan-core", "crates/geoscan-cli"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace.dependencies]
+clap = { version = "4", features = ["derive"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time"] }
