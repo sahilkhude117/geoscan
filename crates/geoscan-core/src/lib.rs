@@ -10,7 +10,10 @@ use tokio::{process::Command, time::timeout};
 pub async fn check_nuclei(executable: &Path) -> Result<String, String> {
     // Pass arguments directly to the executable, without invoking a shell.
     let mut command = Command::new(executable);
-    command.args(["-version", "-nc"]).kill_on_drop(true);
+    command
+        .env_remove("GEOSCAN_PASSWORD")
+        .args(["-version", "-nc"])
+        .kill_on_drop(true);
 
     let output = timeout(Duration::from_secs(10), command.output())
         .await

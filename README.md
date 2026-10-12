@@ -58,6 +58,35 @@ geoscan scan --target http://127.0.0.1:8080/geoserver --db geoscan.db
 Allow GeoServer to finish starting before running detection or scanning. Nuclei
 must be installed and on your PATH; alternatively, pass `--nuclei /path/to/nuclei`.
 
+For interactive setup, just run:
+
+```sh
+geoscan scan
+```
+
+The terminal prompts for the target URL (defaulting to your Docker deployment),
+an optional username, and a hidden password when login is selected. Press Enter
+at the username to skip login. Invalid URLs are prompted again. Provided flags
+fill their corresponding fields, so `geoscan scan --username admin` prompts for
+the target and password without asking for the username again.
+
+Credentials are used only to detect the release through
+`rest/about/version.json`; the REST-index exposure check remains unauthenticated.
+Credentials are not saved in SQLite or passed to Nuclei. The scan output includes
+the detected version and its detection status.
+
+For scripts, use `--no-input`. An authenticated version lookup also requires
+`GEOSCAN_PASSWORD` in the environment; there is no password command-line flag.
+
+```sh
+geoscan scan --no-input --target http://127.0.0.1:8080/geoserver
+# With GEOSCAN_PASSWORD already set by your shell or CI secret store:
+geoscan scan --no-input --target http://127.0.0.1:8080/geoserver --username admin
+```
+
+Without a terminal, supplied flags are used without prompting. A missing target
+or a username without a password fails before any scan request is made.
+
 This command identifies GeoServer, sends an unauthenticated GET request to
 `/rest.html` beneath the supplied application URL, and saves the scan outcome.
 It currently executes **CVE-2025-27505 only**; the other 31 catalogue entries
@@ -239,3 +268,6 @@ and errors, and using the embedded catalogue outside the source directory.
 Existing detection tests use HTTP fixtures. Scanner tests check JSONL parsing,
 deduplication, negative versus missing outcomes, failed requests, unexpected
 check IDs and match URLs, and saving findings and final status in SQLite.
+CLI input tests cover the Docker default, skipping login, invalid URLs, partial
+flags, password whitespace, missing script inputs, and keeping passwords out of
+error output.

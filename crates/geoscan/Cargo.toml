@@ -13,3 +13,4 @@ clap.workspace = true
 geoscan-core = { path = "../geoscan-core" }
 tokio.workspace = true
 serde_json.workspace = true
+console.workspace = true

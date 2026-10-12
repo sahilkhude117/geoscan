@@ -6,6 +6,8 @@ use geoscan_core::detect::detect_geoserver;
 use geoscan_core::scan::scan_geoserver;
 use geoscan_core::{check_database, check_nuclei};
 
+mod scan_input;
+
 // Clap turns these Rust types into commands, flags, and --help text.
 #[derive(Parser)]
 #[command(name = "geoscan", version, about = "GeoServer security checker")]
@@ -44,8 +46,17 @@ enum Commands {
 
     /// Run the reviewed read-only GeoServer check
     Scan {
+        /// Application URL; prompt when omitted in a terminal
         #[arg(long)]
-        target: String,
+        target: Option<String>,
+
+        /// Optional login for version detection; password is prompted or read from GEOSCAN_PASSWORD
+        #[arg(long, value_name = "USERNAME")]
+        username: Option<String>,
+
+        /// Disable prompts for scripts; supply --target and any required credentials
+        #[arg(long)]
+        no_input: bool,
 
         #[arg(long, default_value = "nuclei")]
         nuclei: PathBuf,
@@ -107,7 +118,7 @@ async fn main() -> ExitCode {
             }
 
             if ready {
-                println!("\nPrerequisites are ready. Use detect or checks to continue.");
+                println!("\nPrerequisites are ready. Use scan, detect, or checks to continue.");
                 ExitCode::SUCCESS
             } else {
                 println!("\nFix the failed checks and run doctor again.");
@@ -177,13 +188,36 @@ async fn main() -> ExitCode {
             }
         },
 
-        Commands::Scan { target, nuclei, db } => {
+        Commands::Scan {
+            target,
+            username,
+            no_input,
+            nuclei,
+            db,
+        } => {
+            let input = match scan_input::collect_scan_input(target, username, no_input) {
+                Ok(input) => input,
+                Err(error) => {
+                    eprintln!("Scan setup failed: {error}");
+                    return ExitCode::FAILURE;
+                }
+            };
+
+            if input.auth().is_some() {
+                println!("Login will be used to detect the GeoServer version.");
+            }
+            println!("Exposure check: unauthenticated request.");
             println!("Running the reviewed GeoServer REST-index check...");
 
-            match scan_geoserver(&target, &nuclei, &db).await {
+            match scan_geoserver(&input.target, &nuclei, &db, input.auth()).await {
                 Ok(report) => {
                     println!("Scan ID: {}", report.id);
                     println!("Target: {}", report.target);
+                    println!(
+                        "Version: {}",
+                        report.geoserver_version.as_deref().unwrap_or("Unknown")
+                    );
+                    println!("Version check: {}", report.version_note);
                     println!("Status: {}", report.status);
                     println!("Check: CVE-2025-27505");
                     println!("Matches: {}", report.findings.len());

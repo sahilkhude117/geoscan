@@ -212,7 +212,8 @@ pub async fn detect_geoserver(
     detect_with_client(&client, base, auth).await
 }
 
-fn normalize_target(target: &str) -> Result<Url, String> {
+/// Validate an application URL and preserve its context path with a trailing slash.
+pub fn normalize_target(target: &str) -> Result<Url, String> {
     let mut base = Url::parse(target.trim()).map_err(|e| e.to_string())?;
 
     if !matches!(base.scheme(), "http" | "https") || base.host_str().is_none() {

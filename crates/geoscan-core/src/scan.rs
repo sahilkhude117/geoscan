@@ -27,6 +27,8 @@ pub struct Finding {
 pub struct ScanReport {
     pub id: i64,
     pub target: String,
+    pub geoserver_version: Option<String>,
+    pub version_note: String,
     pub status: String,
     pub reported_events: usize,
     pub not_run: usize,
@@ -111,6 +113,7 @@ async fn run_engine(executable: &Path, target: &str) -> Result<EngineOutput, Str
     let mut command = Command::new(executable);
 
     command
+        .env_remove("GEOSCAN_PASSWORD")
         .env("NUCLEI_CONFIG_DIR", directory.path())
         .arg("-target")
         .arg(target.trim_end_matches('/'))
@@ -257,6 +260,7 @@ pub async fn scan_geoserver(
     target: &str,
     executable: &Path,
     database: &Path,
+    auth: Option<(&str, &str)>,
 ) -> Result<ScanReport, String> {
     let catalogue = load_catalog()?;
 
@@ -269,7 +273,8 @@ pub async fn scan_geoserver(
         return Err("The selected check has not been approved as read-only".into());
     }
 
-    let detection = detect_geoserver(target, None).await?;
+    // Credentials identify the release. The exposure probe below stays anonymous.
+    let detection = detect_geoserver(target, auth).await?;
 
     if !detection.likely_geoserver {
         return Err("GeoServer identification was inconclusive; scan not started".into());
@@ -317,6 +322,8 @@ pub async fn scan_geoserver(
         let report = ScanReport {
             id,
             target: detection.target.clone(),
+            geoserver_version: detection.version.clone(),
+            version_note: detection.version_note.clone(),
             status: status.into(),
             reported_events: output.events,
             not_run: catalogue.len() - 1,
@@ -408,6 +415,8 @@ mod tests {
         let report = ScanReport {
             id,
             target: TARGET.into(),
+            geoserver_version: Some("2.26.2".into()),
+            version_note: "Reported by the REST API".into(),
             status: "matches".into(),
             reported_events: 1,
             not_run: 31,
