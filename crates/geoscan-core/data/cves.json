@@ -1,0 +1,2308 @@
+[
+  {
+    "id": "CVE-2025-58175",
+    "name": "SSRF in XML entity resolution",
+    "vulnerability_type": "SSRF",
+    "description": "XML resolution can send requests outside intended locations when proxy URL configuration defeats the allowlist.",
+    "component": "GeoServer XML entity resolver",
+    "authentication": "Unauthenticated",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 6.5,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://github.com/advisories/GHSA-x4r9-gmw3-hxww"
+      },
+      {
+        "score": 6.5,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-x4r9-gmw3-hxww"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "advisory_publication",
+        "date": "2026-06-11",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-x4r9-gmw3-hxww"
+      }
+    ],
+    "cwes": [
+      "CWE-20",
+      "CWE-611",
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.26.4",
+      ">=2.27.0, <2.27.3"
+    ],
+    "fixed_versions": [
+      "2.26.4",
+      "2.27.3"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "ENTITY_RESOLUTION_ALLOWLIST is in use",
+      "The configured proxy base URL has neither a path nor a trailing slash"
+    ],
+    "remediation": "Upgrade to a patched release; a proxy base URL with a path or trailing slash is the documented workaround.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-x4r9-gmw3-hxww",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-x4r9-gmw3-hxww",
+      "https://github.com/advisories/GHSA-x4r9-gmw3-hxww",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-58175"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 6.5,
+      "severity": "medium",
+      "published": "2026-06-18",
+      "publication_note": "The supplied list marked this date as a possible modification/republish date. Verified source dates are recorded separately."
+    }
+  },
+  {
+    "id": "CVE-2025-52465",
+    "name": "Arbitrary file write through Master Password Dump",
+    "vulnerability_type": "Arbitrary file write",
+    "description": "An administrator can choose a file destination for a plaintext master-password dump, potentially enabling code execution in some deployments.",
+    "component": "GeoServer security web console",
+    "authentication": "Authenticated administrator",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/52xxx/CVE-2025-52465.json"
+      },
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7qmg-grcp-qf25"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2026-06-18",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/52xxx/CVE-2025-52465.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2026-06-24",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/52xxx/CVE-2025-52465.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2026-06-11",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7qmg-grcp-qf25"
+      }
+    ],
+    "cwes": [
+      "CWE-73"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.26.4",
+      ">=2.27.0, <2.27.3"
+    ],
+    "fixed_versions": [
+      "2.26.4",
+      "2.27.3"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The administrator can access the Master Password Dump page",
+      "The GeoServer process can create the destination file and its parent directories already exist"
+    ],
+    "remediation": "Upgrade to a patched release or disable the affected web console.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7qmg-grcp-qf25",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-7qmg-grcp-qf25",
+      "https://github.com/advisories/GHSA-7qmg-grcp-qf25",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/52xxx/CVE-2025-52465.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-52465"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.2,
+      "severity": "high",
+      "published": "2026-06-18",
+      "publication_note": "The supplied list marked this date as a possible modification/republish date. Verified source dates are recorded separately."
+    }
+  },
+  {
+    "id": "CVE-2025-27511",
+    "name": "JNDI injection in DB2 datastore connections",
+    "vulnerability_type": "JNDI injection / remote code execution",
+    "description": "Unsafe DB2 connection parameters allow an administrator to trigger JNDI handling and deserialize untrusted data.",
+    "component": "GeoServer DB2 DataStore extension",
+    "authentication": "Authenticated administrator",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/advisories/GHSA-g628-r368-6vh7"
+      },
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": null,
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-g628-r368-6vh7"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2026-06-18",
+        "source": "https://github.com/advisories/GHSA-g628-r368-6vh7"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2026-06-11",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-g628-r368-6vh7"
+      }
+    ],
+    "cwes": [
+      "CWE-502",
+      "CWE-74"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.27.0"
+    ],
+    "fixed_versions": [
+      "2.27.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The DB2 DataStore extension is installed",
+      "The user can create or configure a DB2 datastore"
+    ],
+    "remediation": "Upgrade the DB2 extension and GeoServer together to a supported patched release.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-g628-r368-6vh7",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-g628-r368-6vh7",
+      "https://github.com/advisories/GHSA-g628-r368-6vh7",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-27511"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.2,
+      "severity": "high",
+      "published": "2026-06-18",
+      "publication_note": "The supplied list marked this date as a possible modification/republish date. Verified source dates are recorded separately."
+    }
+  },
+  {
+    "id": "CVE-2025-21621",
+    "name": "Reflected XSS in WMS GetFeatureInfo HTML",
+    "vulnerability_type": "Reflected XSS",
+    "description": "A crafted style can inject script into HTML feature information viewed by another user.",
+    "component": "GeoServer WMS",
+    "authentication": "Unauthenticated request; victim interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 6.1,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/advisories/GHSA-w66h-j855-qr72"
+      },
+      {
+        "score": 6.1,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-w66h-j855-qr72"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2025-11-25",
+        "source": "https://github.com/advisories/GHSA-w66h-j855-qr72"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-11-25",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-w66h-j855-qr72"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.25.0"
+    ],
+    "fixed_versions": [
+      "2.25.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "WMS dynamic styling and text/html GetFeatureInfo output are enabled",
+      "HTML auto-escaping is absent or disabled",
+      "A victim opens the crafted response"
+    ],
+    "remediation": "Upgrade; enable HTML auto-escaping or disable dynamic styling or text/html GetFeatureInfo output.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-w66h-j855-qr72",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-w66h-j855-qr72",
+      "https://github.com/advisories/GHSA-w66h-j855-qr72",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-21621"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 6.1,
+      "severity": "medium",
+      "published": "2025-11-25",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2025-58360",
+    "name": "Unauthenticated XXE through WMS GetMap",
+    "vulnerability_type": "XXE / SSRF / file disclosure",
+    "description": "WMS XML parsing can resolve attacker-selected external entities, exposing server files or reaching other services.",
+    "component": "GeoServer WMS",
+    "authentication": "Unauthenticated",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 8.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/58xxx/CVE-2025-58360.json"
+      },
+      {
+        "score": 8.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fjf5-xgmq-5525"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2025-11-25",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/58xxx/CVE-2025-58360.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2026-02-26",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/58xxx/CVE-2025-58360.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-11-25",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fjf5-xgmq-5525"
+      }
+    ],
+    "cwes": [
+      "CWE-611"
+    ],
+    "kev": {
+      "date_added": "2025-12-11",
+      "source": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog?field_cve=CVE-2025-58360"
+    },
+    "affected": [
+      "<2.25.6",
+      ">=2.26.0, <2.26.2"
+    ],
+    "fixed_versions": [
+      "2.25.6",
+      "2.26.2"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "The advisory's patched-version table lists 2.26.2, while its resolution prose recommends 2.26.3. The range uses the table; prefer the recommended or a newer supported release.",
+    "prerequisites": [
+      "The WMS service accepts affected GetMap XML input"
+    ],
+    "remediation": "Follow the vendor's resolution guidance and upgrade to a supported patched release.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fjf5-xgmq-5525",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-fjf5-xgmq-5525",
+      "https://github.com/advisories/GHSA-fjf5-xgmq-5525",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/58xxx/CVE-2025-58360.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-58360",
+      "https://www.cisa.gov/known-exploited-vulnerabilities-catalog?field_cve=CVE-2025-58360"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 8.2,
+      "severity": "high",
+      "published": "2025-11-25",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2025-30220",
+    "name": "WFS XML external entity processing",
+    "vulnerability_type": "XXE / SSRF / file disclosure",
+    "description": "WFS schema processing can resolve external XML references outside intended resolver restrictions.",
+    "component": "GeoServer WFS / GeoTools XSD handling",
+    "authentication": "Unauthenticated",
+    "severity": "critical",
+    "cvss": [
+      {
+        "score": 9.9,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:L/A:L",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/30xxx/CVE-2025-30220.json"
+      },
+      {
+        "score": 8.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jj54-8f66-c5pc"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/30xxx/CVE-2025-30220.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/30xxx/CVE-2025-30220.json"
+      },
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-jj54-8f66-c5pc/GHSA-jj54-8f66-c5pc.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jj54-8f66-c5pc"
+      }
+    ],
+    "cwes": [
+      "CWE-611",
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.25.7",
+      ">=2.26.0, <2.26.3",
+      ">=2.27.0, <2.27.1"
+    ],
+    "fixed_versions": [
+      "2.25.7",
+      "2.26.3",
+      "2.27.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "An accessible WFS service processes the vulnerable XML/schema input"
+    ],
+    "remediation": "Upgrade to a currently supported release containing the XML-processing fix.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jj54-8f66-c5pc",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-jj54-8f66-c5pc",
+      "https://github.com/advisories/GHSA-jj54-8f66-c5pc",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/30xxx/CVE-2025-30220.json",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-jj54-8f66-c5pc/GHSA-jj54-8f66-c5pc.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-30220"
+    ],
+    "template": "http/cves/2025/CVE-2025-30220.yaml",
+    "probe_policy": "lab_only",
+    "template_notes": "The mapped template requires an advertised feature type and uses an external callback.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 9.9,
+      "severity": "critical",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2025-30145",
+    "name": "Infinite-loop denial of service in Jiffle",
+    "vulnerability_type": "Denial of service",
+    "description": "Unbounded Jiffle execution can consume processing resources and prevent service availability.",
+    "component": "GeoServer WMS / WPS Jiffle",
+    "authentication": "Unauthenticated if affected operations are public",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.5,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+        "source": "https://github.com/advisories/GHSA-gr67-pwcv-76gf"
+      },
+      {
+        "score": 7.5,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-gr67-pwcv-76gf"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/advisories/GHSA-gr67-pwcv-76gf"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-gr67-pwcv-76gf"
+      }
+    ],
+    "cwes": [
+      "CWE-835"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.25.7",
+      ">=2.26.0, <2.26.3"
+    ],
+    "fixed_versions": [
+      "2.25.7",
+      "2.26.3",
+      "2.27.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges are split by release branch to exclude documented fixes 2.25.7 and 2.26.3. The vendor's additional broad <2.27.0 row overlaps those fixes.",
+    "prerequisites": [
+      "Jiffle rendering transformations or the WPS Jiffle process are accessible"
+    ],
+    "remediation": "Upgrade; disable WMS dynamic styling and the WPS Jiffle process where applicable.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-gr67-pwcv-76gf",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-gr67-pwcv-76gf",
+      "https://github.com/advisories/GHSA-gr67-pwcv-76gf",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-30145"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.5,
+      "severity": "high",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2025-27505",
+    "name": "Missing authorization on REST API index",
+    "vulnerability_type": "Authorization bypass / information disclosure",
+    "description": "HTML REST index routes can bypass the configured REST authorization filter.",
+    "component": "GeoServer REST API",
+    "authentication": "Unauthenticated",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 5.3,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/27xxx/CVE-2025-27505.json"
+      },
+      {
+        "score": 5.3,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-h86g-x8mm-78m5"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/27xxx/CVE-2025-27505.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/27xxx/CVE-2025-27505.json"
+      },
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-h86g-x8mm-78m5/GHSA-h86g-x8mm-78m5.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-h86g-x8mm-78m5"
+      }
+    ],
+    "cwes": [
+      "CWE-862"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.25.6",
+      ">=2.26.0, <2.26.3"
+    ],
+    "fixed_versions": [
+      "2.25.6",
+      "2.26.3"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "REST index endpoints are accessible without the required authorization"
+    ],
+    "remediation": "Upgrade to a supported patched release or apply the vendor's REST security-filter workaround.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-h86g-x8mm-78m5",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-h86g-x8mm-78m5",
+      "https://github.com/advisories/GHSA-h86g-x8mm-78m5",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/27xxx/CVE-2025-27505.json",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-h86g-x8mm-78m5/GHSA-h86g-x8mm-78m5.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-27505"
+    ],
+    "template": "http/cves/2025/CVE-2025-27505.yaml",
+    "probe_policy": "read_only",
+    "template_notes": "The mapped template sends GET requests to REST index pages.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 5.3,
+      "severity": "medium",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-40625",
+    "name": "SSRF through Coverage REST API",
+    "vulnerability_type": "SSRF",
+    "description": "Coverage URL uploads bypass configured URL checks and can fetch unintended destinations.",
+    "component": "GeoServer Coverage REST API",
+    "authentication": "Authenticated user with coverage-store administration rights",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 5.5,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/40xxx/CVE-2024-40625.json"
+      },
+      {
+        "score": 5.5,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:L",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-r4hf-r8gj-jgw2"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/40xxx/CVE-2024-40625.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/40xxx/CVE-2024-40625.json"
+      },
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-r4hf-r8gj-jgw2/GHSA-r4hf-r8gj-jgw2.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-r4hf-r8gj-jgw2"
+      }
+    ],
+    "cwes": [
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.26.0"
+    ],
+    "fixed_versions": [
+      "2.26.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The user can upload coverage data using the REST URL upload method"
+    ],
+    "remediation": "Upgrade and restrict coverage-store administration to trusted users.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-r4hf-r8gj-jgw2",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-r4hf-r8gj-jgw2",
+      "https://github.com/advisories/GHSA-r4hf-r8gj-jgw2",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/40xxx/CVE-2024-40625.json",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-r4hf-r8gj-jgw2/GHSA-r4hf-r8gj-jgw2.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-40625"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 5.5,
+      "severity": "medium",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-38524",
+    "name": "Information disclosure on GeoWebCache home page",
+    "vulnerability_type": "Information disclosure",
+    "description": "The cache home page exposes build details and operational information, including filesystem locations.",
+    "component": "GeoServer embedded GeoWebCache",
+    "authentication": "Unauthenticated if the page is public",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 5.3,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jm79-7xhw-6f6f"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-jm79-7xhw-6f6f/GHSA-jm79-7xhw-6f6f.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jm79-7xhw-6f6f"
+      }
+    ],
+    "cwes": [
+      "CWE-200"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.25.6",
+      ">=2.26.0, <2.26.2"
+    ],
+    "fixed_versions": [
+      "2.25.6",
+      "2.26.2"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The embedded GeoWebCache home page is reachable"
+    ],
+    "remediation": "Upgrade and restrict access to cache administration and status pages.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jm79-7xhw-6f6f",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-jm79-7xhw-6f6f",
+      "https://github.com/advisories/GHSA-jm79-7xhw-6f6f",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-jm79-7xhw-6f6f/GHSA-jm79-7xhw-6f6f.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-38524"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 5.3,
+      "severity": "medium",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-34711",
+    "name": "SSRF through XML URI validation",
+    "vulnerability_type": "SSRF / limited file disclosure",
+    "description": "Weak URI validation permits unintended schema fetches, internal requests, and limited local schema-file disclosure.",
+    "component": "GeoServer XML entity resolver",
+    "authentication": "Unauthenticated",
+    "severity": "critical",
+    "cvss": [
+      {
+        "score": 9.3,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:L/A:N",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/34xxx/CVE-2024-34711.json"
+      },
+      {
+        "score": 6.5,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:L",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-mc43-4fqr-c965"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/34xxx/CVE-2024-34711.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/34xxx/CVE-2024-34711.json"
+      },
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-mc43-4fqr-c965/GHSA-mc43-4fqr-c965.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-mc43-4fqr-c965"
+      }
+    ],
+    "cwes": [
+      "CWE-20",
+      "CWE-200",
+      "CWE-611",
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.25.0"
+    ],
+    "fixed_versions": [
+      "2.25.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "An accessible operation processes external XML schema references using the vulnerable resolver"
+    ],
+    "remediation": "Upgrade and use the documented ENTITY_RESOLUTION_ALLOWLIST configuration.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-mc43-4fqr-c965",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-mc43-4fqr-c965",
+      "https://github.com/advisories/GHSA-mc43-4fqr-c965",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/34xxx/CVE-2024-34711.json",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-mc43-4fqr-c965/GHSA-mc43-4fqr-c965.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34711"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 9.3,
+      "severity": "critical",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-29198",
+    "name": "Unauthenticated SSRF through TestWfsPost",
+    "vulnerability_type": "SSRF",
+    "description": "The demo request servlet can issue server-side requests to attacker-selected locations.",
+    "component": "GeoServer demo request servlet",
+    "authentication": "Unauthenticated",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.5,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-5gw5-jccf-6hxw"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2025-06-10",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-5gw5-jccf-6hxw/GHSA-5gw5-jccf-6hxw.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2025-06-10",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-5gw5-jccf-6hxw"
+      }
+    ],
+    "cwes": [
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      ">=2.0.0, <2.24.4",
+      ">=2.25.0, <2.25.2"
+    ],
+    "fixed_versions": [
+      "2.24.4",
+      "2.25.2"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "The reviewed advisory database includes 2.25.0; the vendor table uses >2.25.0. The inclusive reviewed range is retained to avoid a false negative.",
+    "prerequisites": [
+      "The TestWfsPost servlet is accessible",
+      "Proxy Base URL is unset or can be influenced by incoming requests"
+    ],
+    "remediation": "Upgrade; block TestWfsPost or set a non-overridable PROXY_BASE_URL.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-5gw5-jccf-6hxw",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-5gw5-jccf-6hxw",
+      "https://github.com/advisories/GHSA-5gw5-jccf-6hxw",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2025/06/GHSA-5gw5-jccf-6hxw/GHSA-5gw5-jccf-6hxw.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-29198"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.5,
+      "severity": "high",
+      "published": "2025-06-10",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-35230",
+    "name": "Build information exposed on Welcome and About pages",
+    "vulnerability_type": "Information disclosure",
+    "description": "Public console pages reveal GeoServer and library versions that can assist target identification.",
+    "component": "GeoServer web console",
+    "authentication": "Unauthenticated if the console is public",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 5.3,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-6pfc-w86r-54q6"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-12-16",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/12/GHSA-6pfc-w86r-54q6/GHSA-6pfc-w86r-54q6.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-12-16",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-6pfc-w86r-54q6"
+      }
+    ],
+    "cwes": [
+      "CWE-200"
+    ],
+    "kev": null,
+    "affected": [
+      ">2.0.0"
+    ],
+    "fixed_versions": [
+      "2.25.1"
+    ],
+    "version_scope": "uncertain",
+    "version_notes": "The vendor table lists 2.25.1 as patched, but the description says no patch is available and lists an unbounded affected range. Version-only assessment remains Unknown.",
+    "prerequisites": [
+      "Welcome or About pages expose build details to the requesting user"
+    ],
+    "remediation": "Restrict or disable public console access and verify exposure directly; consult the advisory before assuming a version fixes it.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-6pfc-w86r-54q6",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-6pfc-w86r-54q6",
+      "https://github.com/advisories/GHSA-6pfc-w86r-54q6",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/12/GHSA-6pfc-w86r-54q6/GHSA-6pfc-w86r-54q6.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-35230"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 5.3,
+      "severity": "medium",
+      "published": "2024-12-16",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-36401",
+    "name": "Property-expression remote code execution",
+    "vulnerability_type": "Remote code execution",
+    "description": "OGC property expressions can invoke unsafe XPath evaluation and run arbitrary code.",
+    "component": "GeoServer WFS / WMS / WPS",
+    "authentication": "Unauthenticated",
+    "severity": "critical",
+    "cvss": [
+      {
+        "score": 9.8,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/36xxx/CVE-2024-36401.json"
+      },
+      {
+        "score": 9.8,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-6jj6-gm7p-fcvv"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2024-07-01",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/36xxx/CVE-2024-36401.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2025-10-21",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/36xxx/CVE-2024-36401.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-07-01",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-6jj6-gm7p-fcvv"
+      }
+    ],
+    "cwes": [
+      "CWE-95"
+    ],
+    "kev": {
+      "date_added": "2024-07-15",
+      "source": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog?field_cve=CVE-2024-36401"
+    },
+    "affected": [
+      "<2.22.6",
+      ">=2.23.0, <2.23.6",
+      ">=2.24.0, <2.24.4",
+      ">=2.25.0, <2.25.2"
+    ],
+    "fixed_versions": [
+      "2.22.6",
+      "2.23.6",
+      "2.24.4",
+      "2.25.2"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "An accessible WFS, WMS, or WPS operation processes property expressions"
+    ],
+    "remediation": "Upgrade to a currently supported release containing this fix.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-6jj6-gm7p-fcvv",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-6jj6-gm7p-fcvv",
+      "https://github.com/advisories/GHSA-6jj6-gm7p-fcvv",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2024/36xxx/CVE-2024-36401.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-36401",
+      "https://www.cisa.gov/known-exploited-vulnerabilities-catalog?field_cve=CVE-2024-36401"
+    ],
+    "template": "http/cves/2024/CVE-2024-36401.yaml",
+    "probe_policy": "lab_only",
+    "template_notes": "The mapped template uses WFS and previewed layer names, assumes /geoserver, and executes an external callback command.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 9.8,
+      "severity": "critical",
+      "published": "2024-07-01",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-34696",
+    "name": "Environment variables and Java properties exposed in Server Status",
+    "vulnerability_type": "Sensitive information disclosure",
+    "description": "Status output can expose credentials inherited by the GeoServer process.",
+    "component": "GeoServer Server Status / REST about API",
+    "authentication": "Authenticated administrator",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.5,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:H/I:N/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-j59v-vgcr-hxvf"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-07-01",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/07/GHSA-j59v-vgcr-hxvf/GHSA-j59v-vgcr-hxvf.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-07-01",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-j59v-vgcr-hxvf"
+      }
+    ],
+    "cwes": [
+      "CWE-200"
+    ],
+    "kev": null,
+    "affected": [
+      ">=2.10.0, <2.24.4",
+      ">=2.25.0, <2.25.1"
+    ],
+    "fixed_versions": [
+      "2.24.4",
+      "2.25.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "The reviewed advisory database separates the 2.24 and 2.25 branches. Re-enabling display or parameterized catalogue settings can expose secrets even after upgrading.",
+    "prerequisites": [
+      "The requester has administrative access to status information",
+      "Sensitive values are present in process environment variables or Java properties"
+    ],
+    "remediation": "Upgrade and keep environment/property display disabled; avoid passing secrets through process environment variables.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-j59v-vgcr-hxvf",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-j59v-vgcr-hxvf",
+      "https://github.com/advisories/GHSA-j59v-vgcr-hxvf",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/07/GHSA-j59v-vgcr-hxvf/GHSA-j59v-vgcr-hxvf.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34696"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.5,
+      "severity": "medium",
+      "published": "2024-07-01",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-24749",
+    "name": "Classpath resource disclosure through GeoWebCache",
+    "vulnerability_type": "Path traversal / resource disclosure",
+    "description": "Windows path handling can expose classpath files; an embedded WAR data directory may expose security configuration.",
+    "component": "GeoServer embedded GeoWebCache",
+    "authentication": "Unauthenticated if affected cache resources are public",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.5,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+        "source": "https://github.com/advisories/GHSA-jhqx-5v5g-mpf3"
+      },
+      {
+        "score": 5.9,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jhqx-5v5g-mpf3"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-07-01",
+        "source": "https://github.com/advisories/GHSA-jhqx-5v5g-mpf3"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-07-01",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jhqx-5v5g-mpf3"
+      }
+    ],
+    "cwes": [
+      "CWE-22"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.5",
+      ">=2.24.0, <2.24.3"
+    ],
+    "fixed_versions": [
+      "2.23.5",
+      "2.24.3"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "GeoServer runs on Windows with Apache Tomcat",
+      "The affected GeoWebCache web-resource endpoint is accessible"
+    ],
+    "remediation": "Upgrade and restrict anonymous access to GeoWebCache web resources; the vendor also documents alternative operating systems or servlet containers.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jhqx-5v5g-mpf3",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-jhqx-5v5g-mpf3",
+      "https://github.com/advisories/GHSA-jhqx-5v5g-mpf3",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-24749"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.5,
+      "severity": "high",
+      "published": "2024-07-01",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23821",
+    "name": "Stored XSS in GeoWebCache Demos",
+    "vulnerability_type": "Stored XSS",
+    "description": "Stored catalogue content can execute script when displayed by cache demos.",
+    "component": "GeoServer embedded GeoWebCache Demos",
+    "authentication": "Workspace administrator; victim interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-88wc-fcj9-q3r9"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://github.com/advisories/GHSA-88wc-fcj9-q3r9"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-88wc-fcj9-q3r9"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.4",
+      ">=2.24.0, <2.24.1"
+    ],
+    "fixed_versions": [
+      "2.23.4",
+      "2.24.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "A workspace administrator can modify catalogue values",
+      "Another user opens the affected GWC Demos page"
+    ],
+    "remediation": "Upgrade and restrict catalogue editing to trusted administrators.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-88wc-fcj9-q3r9",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-88wc-fcj9-q3r9",
+      "https://github.com/advisories/GHSA-88wc-fcj9-q3r9",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23821"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23819",
+    "name": "Stored XSS in MapML HTML output",
+    "vulnerability_type": "Stored XSS",
+    "description": "MapML output can include script-bearing stored catalogue values.",
+    "component": "GeoServer MapML extension",
+    "authentication": "Workspace administrator; victim interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": null,
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7x76-57fr-m5r5"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-7x76-57fr-m5r5/GHSA-7x76-57fr-m5r5.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7x76-57fr-m5r5"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.4",
+      ">=2.24.0, <2.24.1"
+    ],
+    "fixed_versions": [
+      "2.23.4",
+      "2.24.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The MapML extension is installed",
+      "A workspace administrator can modify catalogue values",
+      "Another user opens MapML HTML output"
+    ],
+    "remediation": "Upgrade the MapML extension and GeoServer together.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7x76-57fr-m5r5",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-7x76-57fr-m5r5",
+      "https://github.com/advisories/GHSA-7x76-57fr-m5r5",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-7x76-57fr-m5r5/GHSA-7x76-57fr-m5r5.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23819"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23818",
+    "name": "Stored XSS in WMS OpenLayers output",
+    "vulnerability_type": "Stored XSS",
+    "description": "OpenLayers output can execute script embedded in stored catalogue values.",
+    "component": "GeoServer WMS OpenLayers output",
+    "authentication": "Workspace administrator; victim interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fcpm-hchj-mh72"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-fcpm-hchj-mh72/GHSA-fcpm-hchj-mh72.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fcpm-hchj-mh72"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.3",
+      ">=2.24.0, <2.24.1"
+    ],
+    "fixed_versions": [
+      "2.23.3",
+      "2.24.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "A workspace administrator can modify catalogue values",
+      "Another user opens WMS OpenLayers output"
+    ],
+    "remediation": "Upgrade and restrict catalogue editing to trusted administrators.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fcpm-hchj-mh72",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-fcpm-hchj-mh72",
+      "https://github.com/advisories/GHSA-fcpm-hchj-mh72",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-fcpm-hchj-mh72/GHSA-fcpm-hchj-mh72.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23818"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23643",
+    "name": "Stored XSS in GeoWebCache Seed form",
+    "vulnerability_type": "Stored XSS",
+    "description": "Stored catalogue content can inject script into the cache seeding administration form.",
+    "component": "GeoServer embedded GeoWebCache Seed form",
+    "authentication": "Workspace administrator; victim administrator interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-56r3-f536-5gf7"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-56r3-f536-5gf7/GHSA-56r3-f536-5gf7.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-56r3-f536-5gf7"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.2",
+      ">=2.24.0, <2.24.1"
+    ],
+    "fixed_versions": [
+      "2.23.2",
+      "2.24.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "A workspace administrator can modify catalogue values",
+      "Another administrator opens the cache Seed form"
+    ],
+    "remediation": "Upgrade and retain administrator-only access to cache seeding.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-56r3-f536-5gf7",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-56r3-f536-5gf7",
+      "https://github.com/advisories/GHSA-56r3-f536-5gf7",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-56r3-f536-5gf7/GHSA-56r3-f536-5gf7.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23643"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23642",
+    "name": "Stored XSS in Simple SVG renderer",
+    "vulnerability_type": "Stored XSS",
+    "description": "Stored catalogue content can inject script into maps produced by the Simple SVG renderer.",
+    "component": "GeoServer WMS Simple SVG renderer",
+    "authentication": "Workspace administrator; victim interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fg9v-56hw-g525"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-fg9v-56hw-g525/GHSA-fg9v-56hw-g525.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fg9v-56hw-g525"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.4",
+      ">=2.24.0, <2.24.1"
+    ],
+    "fixed_versions": [
+      "2.23.4",
+      "2.24.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The Simple SVG renderer is enabled",
+      "A workspace administrator can modify catalogue values",
+      "Another user views SVG map output"
+    ],
+    "remediation": "Upgrade and restrict catalogue editing to trusted administrators.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fg9v-56hw-g525",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-fg9v-56hw-g525",
+      "https://github.com/advisories/GHSA-fg9v-56hw-g525",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-fg9v-56hw-g525/GHSA-fg9v-56hw-g525.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23642"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23640",
+    "name": "Stored XSS in Style Publisher",
+    "vulnerability_type": "Stored XSS",
+    "description": "Stored style resources or datastore content can execute script through published style output.",
+    "component": "GeoServer Style Publisher",
+    "authentication": "Workspace administrator; victim interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-9rfr-pf2x-g4xf"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-9rfr-pf2x-g4xf/GHSA-9rfr-pf2x-g4xf.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-9rfr-pf2x-g4xf"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.3"
+    ],
+    "fixed_versions": [
+      "2.23.3",
+      "2.24.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "An administrator can upload style or legend resources or configure a datastore",
+      "Another user opens the affected published resource"
+    ],
+    "remediation": "Upgrade and restrict style and datastore administration.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-9rfr-pf2x-g4xf",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-9rfr-pf2x-g4xf",
+      "https://github.com/advisories/GHSA-9rfr-pf2x-g4xf",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-9rfr-pf2x-g4xf/GHSA-9rfr-pf2x-g4xf.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23640"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2024-23634",
+    "name": "Arbitrary file renaming through store REST APIs",
+    "vulnerability_type": "Arbitrary file renaming",
+    "description": "External upload handling can rename files outside the intended upload area and disrupt configuration or availability.",
+    "component": "GeoServer Coverage / Data Store REST APIs",
+    "authentication": "Authenticated user with store administration rights",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 6,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-75m5-hh4r-q9gx"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-75m5-hh4r-q9gx/GHSA-75m5-hh4r-q9gx.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-75m5-hh4r-q9gx"
+      }
+    ],
+    "cwes": [
+      "CWE-20",
+      "CWE-73"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.5",
+      ">=2.24.0, <2.24.2"
+    ],
+    "fixed_versions": [
+      "2.23.5",
+      "2.24.2"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The user can invoke external store uploads",
+      "The GeoServer process has permission to rename the referenced file or directory"
+    ],
+    "remediation": "Upgrade and restrict store administration.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-75m5-hh4r-q9gx",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-75m5-hh4r-q9gx",
+      "https://github.com/advisories/GHSA-75m5-hh4r-q9gx",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-75m5-hh4r-q9gx/GHSA-75m5-hh4r-q9gx.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-23634"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 6,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-51445",
+    "name": "Stored XSS through REST Resources API",
+    "vulnerability_type": "Stored XSS",
+    "description": "Uploaded resources can be returned without suitable sanitization and execute script in an administrator's browser.",
+    "component": "GeoServer REST Resources API",
+    "authentication": "Workspace administrator; victim administrator interaction required",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 4.8,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fh7p-5f6g-vj2w"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-fh7p-5f6g-vj2w/GHSA-fh7p-5f6g-vj2w.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fh7p-5f6g-vj2w"
+      }
+    ],
+    "cwes": [
+      "CWE-79"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.3"
+    ],
+    "fixed_versions": [
+      "2.23.3",
+      "2.24.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "A workspace administrator can upload style or legend resources",
+      "Another administrator views the resource through the REST API"
+    ],
+    "remediation": "Upgrade and restrict REST resource access and uploads.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-fh7p-5f6g-vj2w",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-fh7p-5f6g-vj2w",
+      "https://github.com/advisories/GHSA-fh7p-5f6g-vj2w",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-fh7p-5f6g-vj2w/GHSA-fh7p-5f6g-vj2w.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-51445"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 4.8,
+      "severity": "medium",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-51444",
+    "name": "Arbitrary file upload through Coverage Store REST API",
+    "vulnerability_type": "Arbitrary file write / upload",
+    "description": "Coverage uploads can escape their destination and overwrite files, with code execution possible in some environments.",
+    "component": "GeoServer Coverage Store REST API",
+    "authentication": "Authenticated user with coverage-store administration rights",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2023/51xxx/CVE-2023-51444.json"
+      },
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-9v5q-2gwq-q9hq"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2023/51xxx/CVE-2023-51444.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2024-08-21",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2023/51xxx/CVE-2023-51444.json"
+      },
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-9v5q-2gwq-q9hq/GHSA-9v5q-2gwq-q9hq.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-9v5q-2gwq-q9hq"
+      }
+    ],
+    "cwes": [
+      "CWE-20",
+      "CWE-434"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.23.4",
+      ">=2.24.0, <2.24.1"
+    ],
+    "fixed_versions": [
+      "2.23.4",
+      "2.24.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The user can modify coverage stores",
+      "A coverage store uses an absolute filesystem path"
+    ],
+    "remediation": "Upgrade and restrict coverage-store administration.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-9v5q-2gwq-q9hq",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-9v5q-2gwq-q9hq",
+      "https://github.com/advisories/GHSA-9v5q-2gwq-q9hq",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2023/51xxx/CVE-2023-51444.json",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-9v5q-2gwq-q9hq/GHSA-9v5q-2gwq-q9hq.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-51444"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.2,
+      "severity": "high",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-41877",
+    "name": "Log file path traversal",
+    "vulnerability_type": "Path traversal / arbitrary file access",
+    "description": "Administrative log-location configuration can expose or overwrite files outside the intended logging directory.",
+    "component": "GeoServer logging configuration",
+    "authentication": "Authenticated administrator",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-8g7v-vjrc-x4g5"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2024-03-20",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-8g7v-vjrc-x4g5/GHSA-8g7v-vjrc-x4g5.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2024-03-19",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-8g7v-vjrc-x4g5"
+      }
+    ],
+    "cwes": [
+      "CWE-22"
+    ],
+    "kev": null,
+    "affected": [
+      "<3.0.0"
+    ],
+    "fixed_versions": [
+      "3.0.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "The current vendor advisory states a fix in 3.0.0. Older reviewed database records only list releases through 2.23.4; those older bounds are not used.",
+    "prerequisites": [
+      "The administrator can configure logging through Global Settings",
+      "The configured filesystem location is readable or writable by the GeoServer process"
+    ],
+    "remediation": "Use GeoServer 3.0.0 or newer, or pin GEOSERVER_LOG_LOCATION at deployment level to prevent UI overrides.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-8g7v-vjrc-x4g5",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-8g7v-vjrc-x4g5",
+      "https://github.com/advisories/GHSA-8g7v-vjrc-x4g5",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2024/03/GHSA-8g7v-vjrc-x4g5/GHSA-8g7v-vjrc-x4g5.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-41877"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.2,
+      "severity": "high",
+      "published": "2024-03-20",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-5786",
+    "name": "Direct access to GeoWebCache REST HTML index",
+    "vulnerability_type": "Authorization bypass / information disclosure",
+    "description": "A direct request to the cache REST index can bypass expected access restrictions.",
+    "component": "GeoWebCache",
+    "authentication": "Unauthenticated",
+    "severity": "medium",
+    "cvss": [
+      {
+        "score": 5.3,
+        "severity": "medium",
+        "version": "3.1",
+        "vector": null,
+        "source": "https://vuldb.com/vuln/243592"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "advisory_publication",
+        "date": "2023-10-26",
+        "source": "https://vuldb.com/vuln/243592"
+      }
+    ],
+    "cwes": [
+      "CWE-425"
+    ],
+    "kev": null,
+    "affected": [
+      "=1.15.0",
+      "=1.15.1"
+    ],
+    "fixed_versions": [],
+    "version_scope": "geo_web_cache",
+    "version_notes": "The CNA names GeoWebCache 1.15.0 and 1.15.1. These are dependency versions, not GeoServer releases, so a GeoServer-only assessment remains Unknown.",
+    "prerequisites": [
+      "GeoWebCache 1.15.0 or 1.15.1 is present",
+      "The REST HTML index is reachable without required authorization"
+    ],
+    "remediation": "Restrict access to the affected cache REST index and consult the component's release guidance; no fixed version is verified here.",
+    "advisory_url": "https://vuldb.com/vuln/243592",
+    "references": [
+      "https://vuldb.com/vuln/243592",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-5786"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 5.3,
+      "severity": "medium",
+      "published": "2023-10-26",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-43795",
+    "name": "SSRF through WPS remote inputs",
+    "vulnerability_type": "SSRF",
+    "description": "Remote WPS inputs can cause the server to fetch unintended services.",
+    "component": "GeoServer WPS extension",
+    "authentication": "Unauthenticated if WPS is public",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 8.6,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L",
+        "source": "https://github.com/advisories/GHSA-5pr3-m5hm-9956"
+      },
+      {
+        "score": 8.6,
+        "severity": "high",
+        "version": "3.1",
+        "vector": null,
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-5pr3-m5hm-9956"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2023-10-25",
+        "source": "https://github.com/advisories/GHSA-5pr3-m5hm-9956"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2023-10-24",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-5pr3-m5hm-9956"
+      }
+    ],
+    "cwes": [
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.22.5",
+      ">=2.23.0, <2.23.2"
+    ],
+    "fixed_versions": [
+      "2.22.5",
+      "2.23.2",
+      "2.24.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Earlier patched branches require administrators to enable URL checks. Safe processing defaults are documented from 2.24.0.",
+    "prerequisites": [
+      "The WPS extension is installed",
+      "Remote complex inputs are enabled",
+      "URL checks are disabled or allow the destination"
+    ],
+    "remediation": "Upgrade and enable URL checks, or disable remote complex inputs.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-5pr3-m5hm-9956",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-5pr3-m5hm-9956",
+      "https://github.com/advisories/GHSA-5pr3-m5hm-9956",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-43795"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 8.6,
+      "severity": "high",
+      "published": "2023-10-24",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-41339",
+    "name": "Blind SSRF through WMS remote styles",
+    "vulnerability_type": "SSRF / credential disclosure",
+    "description": "Remote styles can trigger unintended fetches and may expose Windows authentication material.",
+    "component": "GeoServer WMS",
+    "authentication": "Unauthenticated if WMS is public",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 8.6,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-cqpc-x2c6-2gmf"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2023-10-25",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2023/10/GHSA-cqpc-x2c6-2gmf/GHSA-cqpc-x2c6-2gmf.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2023-10-24",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-cqpc-x2c6-2gmf"
+      }
+    ],
+    "cwes": [
+      "CWE-918"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.22.5",
+      ">=2.23.0, <2.23.2"
+    ],
+    "fixed_versions": [
+      "2.22.5",
+      "2.23.2",
+      "2.24.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Earlier patched branches require URL checks to be configured; upgrading alone does not validate deployed styling settings.",
+    "prerequisites": [
+      "WMS dynamic styling is enabled",
+      "URL checks are disabled or permit unsafe remote or file destinations"
+    ],
+    "remediation": "Upgrade and enable URL checks, or disable WMS dynamic styling.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-cqpc-x2c6-2gmf",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-cqpc-x2c6-2gmf",
+      "https://github.com/advisories/GHSA-cqpc-x2c6-2gmf",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2023/10/GHSA-cqpc-x2c6-2gmf/GHSA-cqpc-x2c6-2gmf.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-41339"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 8.6,
+      "severity": "high",
+      "published": "2023-10-24",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2023-25157",
+    "name": "SQL injection through OGC filters",
+    "vulnerability_type": "SQL injection",
+    "description": "Multiple filter functions can place inadequately escaped values into generated SQL.",
+    "component": "GeoServer database-backed WFS / WMS / WCS",
+    "authentication": "Unauthenticated if affected layers are public",
+    "severity": "critical",
+    "cvss": [
+      {
+        "score": 9.8,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/advisories/GHSA-7g5f-wrx8-5ccf"
+      },
+      {
+        "score": 9.8,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7g5f-wrx8-5ccf"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "nvd_publication",
+        "date": "2023-02-21",
+        "source": "https://github.com/advisories/GHSA-7g5f-wrx8-5ccf"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2023-02-21",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7g5f-wrx8-5ccf"
+      }
+    ],
+    "cwes": [
+      "CWE-89"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.18.7",
+      ">=2.19.0, <2.19.7",
+      ">=2.20.0, <2.20.7",
+      ">=2.21.0, <2.21.4",
+      ">=2.22.0, <2.22.2"
+    ],
+    "fixed_versions": [
+      "2.18.7",
+      "2.19.7",
+      "2.20.7",
+      "2.21.4",
+      "2.22.2"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Affected ranges are split around all five vendor-documented branch fixes so backported fixes are not misclassified.",
+    "prerequisites": [
+      "A published layer uses an affected database datastore and field/filter combination",
+      "The relevant filter operation is accessible"
+    ],
+    "remediation": "Upgrade; follow vendor guidance on prepared statements and encode functions, recognizing that these do not cover every affected filter.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-7g5f-wrx8-5ccf",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-7g5f-wrx8-5ccf",
+      "https://github.com/advisories/GHSA-7g5f-wrx8-5ccf",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-25157"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 9.8,
+      "severity": "critical",
+      "published": "2023-02-21",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2022-24847",
+    "name": "Unsafe JNDI lookup and deserialization",
+    "vulnerability_type": "Input validation / JNDI / deserialization",
+    "description": "Unchecked JNDI lookups can deserialize untrusted data while administrators configure services.",
+    "component": "GeoServer security, datastores and cache configuration",
+    "authentication": "Authenticated administrator",
+    "severity": "high",
+    "cvss": [
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2022/24xxx/CVE-2022-24847.json"
+      },
+      {
+        "score": 7.2,
+        "severity": "high",
+        "version": "3.1",
+        "vector": null,
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-4pm3-f52j-8ggh"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2022-04-13",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2022/24xxx/CVE-2022-24847.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2025-04-23",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2022/24xxx/CVE-2022-24847.json"
+      },
+      {
+        "kind": "nvd_publication",
+        "date": "2022-04-13",
+        "source": "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2022/04/GHSA-4pm3-f52j-8ggh/GHSA-4pm3-f52j-8ggh.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2022-04-13",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-4pm3-f52j-8ggh"
+      }
+    ],
+    "cwes": [
+      "CWE-20",
+      "CWE-917"
+    ],
+    "kev": null,
+    "affected": [
+      "<2.19.6",
+      ">=2.20.0, <2.20.4"
+    ],
+    "fixed_versions": [
+      "2.19.6",
+      "2.20.4",
+      "2.21.0"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "The administrator can configure a security resource, JNDI datastore, or cache disk quota"
+    ],
+    "remediation": "Upgrade and restrict administration and configuration APIs to trusted operators.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-4pm3-f52j-8ggh",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-4pm3-f52j-8ggh",
+      "https://github.com/advisories/GHSA-4pm3-f52j-8ggh",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2022/24xxx/CVE-2022-24847.json",
+      "https://raw.githubusercontent.com/github/advisory-database/main/advisories/github-reviewed/2022/04/GHSA-4pm3-f52j-8ggh/GHSA-4pm3-f52j-8ggh.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2022-24847"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped; a suitable probe must be reviewed before scanning.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": {
+      "cvss_score": 7.2,
+      "severity": "high",
+      "published": "2022-04-13",
+      "publication_note": null
+    }
+  },
+  {
+    "id": "CVE-2026-76904",
+    "name": "PostGIS jsonArrayContains SQL injection",
+    "vulnerability_type": "SQL injection",
+    "description": "A JSON filter function can place unescaped values into generated PostGIS SQL.",
+    "component": "GeoServer PostGIS / GeoTools JDBC",
+    "authentication": "Unauthenticated if affected layers are public",
+    "severity": "critical",
+    "cvss": [
+      {
+        "score": 9.8,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/76xxx/CVE-2026-76904.json"
+      },
+      {
+        "score": 9.1,
+        "severity": "critical",
+        "version": "3.1",
+        "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jvpx-6qxg-whgc"
+      }
+    ],
+    "dates": [
+      {
+        "kind": "cve_publication",
+        "date": "2026-08-21",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/76xxx/CVE-2026-76904.json"
+      },
+      {
+        "kind": "cve_modified",
+        "date": "2026-08-27",
+        "source": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/76xxx/CVE-2026-76904.json"
+      },
+      {
+        "kind": "advisory_publication",
+        "date": "2026-08-24",
+        "source": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jvpx-6qxg-whgc"
+      }
+    ],
+    "cwes": [
+      "CWE-89"
+    ],
+    "kev": null,
+    "affected": [
+      ">2.23.5, <2.27.6",
+      ">=2.28.0, <2.28.5",
+      ">=3.0.0, <3.0.1"
+    ],
+    "fixed_versions": [
+      "2.27.6",
+      "2.28.5",
+      "3.0.1"
+    ],
+    "version_scope": "geo_server",
+    "version_notes": "Ranges describe GeoServer releases. Configuration, mitigations, and locally backported patches require separate verification.",
+    "prerequisites": [
+      "A published PostGIS layer uses PostgreSQL 12 or newer",
+      "The layer contains a String or JSON field",
+      "WFS or WMS accepts the relevant filter expression"
+    ],
+    "remediation": "Upgrade to a currently supported release containing this fix; the first patched releases are 2.27.6, 2.28.5, and 3.0.1.",
+    "advisory_url": "https://github.com/geoserver/geoserver/security/advisories/GHSA-jvpx-6qxg-whgc",
+    "references": [
+      "https://github.com/geoserver/geoserver/security/advisories/GHSA-jvpx-6qxg-whgc",
+      "https://github.com/advisories/GHSA-jvpx-6qxg-whgc",
+      "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/76xxx/CVE-2026-76904.json",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-76904"
+    ],
+    "template": null,
+    "probe_policy": "unreviewed",
+    "template_notes": "No active template is mapped in this starter catalogue.",
+    "researched_at": "2026-10-12",
+    "reported_metadata": null
+  }
+]

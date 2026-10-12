@@ -75,4 +75,5 @@ pub async fn check_database(path: &Path) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
+pub mod catalog;
 pub mod detect;
