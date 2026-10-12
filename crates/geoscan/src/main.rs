@@ -3,6 +3,7 @@ use std::{path::PathBuf, process::ExitCode};
 use clap::{Parser, Subcommand};
 use geoscan_core::catalog::{CveCheck, VersionScope, VersionStatus, assess_version, load_catalog};
 use geoscan_core::detect::detect_geoserver;
+use geoscan_core::scan::scan_geoserver;
 use geoscan_core::{check_database, check_nuclei};
 
 // Clap turns these Rust types into commands, flags, and --help text.
@@ -39,6 +40,18 @@ enum Commands {
     Checks {
         #[command(subcommand)]
         command: CheckCommands,
+    },
+
+    /// Run the reviewed read-only GeoServer check
+    Scan {
+        #[arg(long)]
+        target: String,
+
+        #[arg(long, default_value = "nuclei")]
+        nuclei: PathBuf,
+
+        #[arg(long, default_value = "geoscan.db")]
+        db: PathBuf,
     },
 }
 
@@ -163,6 +176,43 @@ async fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
+
+        Commands::Scan { target, nuclei, db } => {
+            println!("Running the reviewed GeoServer REST-index check...");
+
+            match scan_geoserver(&target, &nuclei, &db).await {
+                Ok(report) => {
+                    println!("Scan ID: {}", report.id);
+                    println!("Target: {}", report.target);
+                    println!("Status: {}", report.status);
+                    println!("Check: CVE-2025-27505");
+                    println!("Matches: {}", report.findings.len());
+                    println!("Catalogue entries not run: {}", report.not_run);
+                    println!("Saved to: {}", db.display());
+
+                    for finding in &report.findings {
+                        println!(
+                            "[{:?}] {} at {}",
+                            finding.severity, finding.cve_id, finding.matched_at
+                        );
+                    }
+
+                    println!("Results cover this check only; matches need verification.");
+
+                    if report.status == "inconclusive" {
+                        eprintln!("No request outcome was returned; inspect scans.diagnostics.");
+                        ExitCode::from(2)
+                    } else {
+                        ExitCode::SUCCESS
+                    }
+                }
+
+                Err(error) => {
+                    eprintln!("Scan failed: {error}");
+                    ExitCode::FAILURE
+                }
+            }
+        }
     }
 }
 

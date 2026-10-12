@@ -2,8 +2,9 @@
 
 A Rust CLI for identifying GeoServer and comparing its release version with a
 researched CVE catalogue. The shared `geoscan-core` crate will also support a future
-web backend. SQLite access and the Nuclei installation can be checked with
-`doctor`; active vulnerability scanning and scan history are future steps.
+web backend. `doctor` checks SQLite access and the Nuclei installation. `scan`
+runs one reviewed REST-index exposure check and stores its outcome in SQLite.
+Commands for browsing scan history are a future step.
 
 ## Run the CLI
 
@@ -27,7 +28,7 @@ Omitting the version gives an unknown assessment.
 To install or update the `geoscan` command on your PATH:
 
 ```sh
-cargo install --path crates/geoscan --locked
+cargo install --path crates/geoscan --locked --force
 geoscan checks list
 geoscan checks show --id CVE-2025-58360
 geoscan checks assess --geoserver-version 2.28.2
@@ -41,6 +42,42 @@ geoscan checks list --json > cves-export.json
 
 JSON export contains only a JSON array, with no human-readable banner.
 Unknown CVE IDs passed to `checks show` exit with an error.
+
+## Run the REST-index check
+
+After rebuilding the installed command, run these commands from the project root:
+
+```sh
+docker compose up -d
+geoscan scan --help
+geoscan doctor --db geoscan.db
+geoscan detect --target http://127.0.0.1:8080/geoserver
+geoscan scan --target http://127.0.0.1:8080/geoserver --db geoscan.db
+```
+
+Allow GeoServer to finish starting before running detection or scanning. Nuclei
+must be installed and on your PATH; alternatively, pass `--nuclei /path/to/nuclei`.
+
+This command identifies GeoServer, sends an unauthenticated GET request to
+`/rest.html` beneath the supplied application URL, and saves the scan outcome.
+It currently executes **CVE-2025-27505 only**; the other 31 catalogue entries
+are not run. Only scan deployments you own or have permission to assess.
+
+- `matches`: the response matched the exposure template; verify the finding.
+- `no_match`: the request returned a negative matcher result for this check.
+- `inconclusive`: the engine returned no request outcome; exit code 2.
+- A failed scan exits with code 1. Engine failures after the scan starts are
+  recorded in SQLite with status `failed`.
+
+`matches` and `no_match` both exit with code 0. These results cover this one check
+and do not establish whether the deployment is secure overall.
+
+View stored outcomes without a history command:
+
+```sh
+sqlite3 -header -column geoscan.db 'SELECT id, target, check_id, status, reported_events, error FROM scans ORDER BY id DESC;'
+sqlite3 -header -column geoscan.db 'SELECT scan_id, cve_id, matched_at FROM findings ORDER BY id DESC;'
+```
 
 ## Read assessment results
 
@@ -78,7 +115,7 @@ Each entry in [cves.json](crates/geoscan-core/data/cves.json) includes:
 - Affected and fixed release ranges, their version scope, and interpretation notes.
 - Configuration prerequisites, remediation, advisory links, research references,
   and recorded CISA KEV metadata where verified.
-- Future probe policy, template mapping, and probe notes.
+- Probe policy, template mapping, and probe notes.
 - The user's original score, severity, and reported publication date, kept
   separately as `reported_metadata`.
 
@@ -183,8 +220,9 @@ These 32 research records do not imply 32 executable Nuclei checks.
   template mappings.
 - `Unreviewed`: the other 29 records have no active template mapped.
 
-The commands execute no templates. Policy labels describe future scanning
-requirements and are not yet enforced by a scanning runner.
+`checks` commands execute no templates. `scan` selects only CVE-2025-27505,
+verifies its `ReadOnly` policy, and runs the embedded GET-based template.
+No `LabOnly` or `Unreviewed` checks are executed.
 
 ## Verify changes
 
@@ -198,4 +236,6 @@ cargo build -p geoscan --locked
 Tests cover all requested IDs, affected/fixed boundaries, version scope, unknown
 versions, score/date provenance, invalid metadata, JSON export, CLI details, help
 and errors, and using the embedded catalogue outside the source directory.
-Existing detection tests use HTTP fixtures.
+Existing detection tests use HTTP fixtures. Scanner tests check JSONL parsing,
+deduplication, negative versus missing outcomes, failed requests, unexpected
+check IDs and match URLs, and saving findings and final status in SQLite.
