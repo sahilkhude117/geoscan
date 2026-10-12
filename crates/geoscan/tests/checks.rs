@@ -37,7 +37,7 @@ fn list_shows_the_catalogue_and_review_policies_outside_the_project() {
         ("CVE-2024-36401", "LabOnly"),
         ("CVE-2025-27505", "ReadOnly"),
         ("CVE-2025-30220", "LabOnly"),
-        ("CVE-2026-76904", "Unreviewed"),
+        ("CVE-2026-76904", "ReadOnly"),
     ] {
         let entry = stdout.lines().find(|line| line.starts_with(id)).unwrap();
         assert!(entry.contains(policy));

@@ -3,7 +3,8 @@
 A Rust CLI for identifying GeoServer and comparing its release version with a
 researched CVE catalogue. The shared `geoscan-core` crate will also support a future
 web backend. `doctor` checks SQLite access and the Nuclei installation. `scan`
-runs one reviewed REST-index exposure check and stores its outcome in SQLite.
+runs reviewed REST-index and PostGIS JSON-filter checks and stores per-CVE
+outcomes in SQLite.
 Commands for browsing scan history are a future step.
 
 ## Run the CLI
@@ -43,7 +44,7 @@ geoscan checks list --json > cves-export.json
 JSON export contains only a JSON array, with no human-readable banner.
 Unknown CVE IDs passed to `checks show` exit with an error.
 
-## Run the REST-index check
+## Run the CVE checks
 
 After rebuilding the installed command, run these commands from the project root:
 
@@ -71,7 +72,7 @@ fill their corresponding fields, so `geoscan scan --username admin` prompts for
 the target and password without asking for the username again.
 
 Credentials are used only to detect the release through
-`rest/about/version.json`; the REST-index exposure check remains unauthenticated.
+`rest/about/version.json`; both CVE probes remain unauthenticated.
 Credentials are not saved in SQLite or passed to Nuclei. The scan output includes
 the detected version and its detection status.
 
@@ -87,26 +88,103 @@ geoscan scan --no-input --target http://127.0.0.1:8080/geoserver --username admi
 Without a terminal, supplied flags are used without prompting. A missing target
 or a username without a password fails before any scan request is made.
 
-This command identifies GeoServer, sends an unauthenticated GET request to
-`/rest.html` beneath the supplied application URL, and saves the scan outcome.
-It currently executes **CVE-2025-27505 only**; the other 31 catalogue entries
-are not run. Only scan deployments you own or have permission to assess.
+This command identifies GeoServer and supports two reviewed checks:
+
+- **CVE-2025-27505:** GET-based detection of REST-index exposure at `/rest.html`.
+- **CVE-2026-76904:** a WFS schema preflight followed by two GET requests that
+  compare a valid `jsonArrayContains` filter with an apostrophe-containing value.
+  A match requires a successful GeoJSON baseline and a PostgreSQL or PostgreSQL
+  JDBC quoting error in the second response. This reports SQL-generation error
+  evidence and requires verification; no additional SQL statements, delays, or
+  file operations are sent.
+
+With prepared statements enabled, the apostrophe probe can return an
+`Unterminated identifier ... in SQL SELECT ... jsonb_path_exists(...)` exception.
+This PostgreSQL JDBC parser error is recognized even when the response omits the
+`PSQLException` class name. The matcher still requires a successful baseline,
+an OGC exception response, and the expected quote-error and SQL/function context.
+Such a failure can occur before the database executes the query, so a match does
+not establish arbitrary SQL execution. See the
+[PostgreSQL JDBC parser](https://github.com/pgjdbc/pgjdbc/blob/master/pgjdbc/src/main/java/org/postgresql/core/Parser.java).
+
+The SQLi check selects `geoscan_sqli_demo:items` and its String attribute
+`json_data` by default. Use `--sqli-layer workspace:layer --sqli-property field`
+for another published PostGIS layer with JSON stored in a String-mapped attribute.
+The schema preflight cannot establish the underlying database type or version;
+the comparison checks observable response behavior. It covers only the selected
+layer and attribute. Only scan deployments you own or have permission to assess.
+
+The other 30 catalogue entries have no implemented active probe. If the selected
+layer or String attribute is unavailable, the SQLi probe is skipped and the
+printed catalogue entries not run count is 31.
 
 - `matches`: the response matched the exposure template; verify the finding.
-- `no_match`: the request returned a negative matcher result for this check.
+- `no_match`: the engine completed without reporting an error and returned a
+  negative matcher result for this check. Nuclei omits `matched-at` for these
+  results; GeoScan accepts them without requiring a positive-match URL.
 - `inconclusive`: the engine returned no request outcome; exit code 2.
-- A failed scan exits with code 1. Engine failures after the scan starts are
-  recorded in SQLite with status `failed`.
+- `not_applicable`: a required layer or String attribute is missing; no SQLi
+  template is run.
+- `failed`: an engine check failed; its error is saved with that CVE.
+- Overall `partial` means a completed check and an incomplete or failed check;
+  findings from the completed check are retained, and the CLI exits with code 2.
+- A wholly failed scan or a setup failure exits with code 1.
 
-`matches` and `no_match` both exit with code 0. These results cover this one check
-and do not establish whether the deployment is secure overall.
+Overall `matches` and `no_match` both exit with code 0. These results cover the
+probes actually run and do not establish whether the deployment is secure overall.
 
 View stored outcomes without a history command:
 
 ```sh
 sqlite3 -header -column geoscan.db 'SELECT id, target, check_id, status, reported_events, error FROM scans ORDER BY id DESC;'
+sqlite3 -header -column geoscan.db 'SELECT scan_id, cve_id, status, matched_count FROM scan_checks ORDER BY scan_id DESC, cve_id;'
 sqlite3 -header -column geoscan.db 'SELECT scan_id, cve_id, matched_at FROM findings ORDER BY id DESC;'
 ```
+
+Each new scan stores one row per supported CVE in `scan_checks`, including skipped
+checks. Existing scan rows and findings are preserved; old records do not gain
+invented per-check outcomes. The legacy `scans.check_id` column stores the two
+supported IDs separated by a comma for new scans. Notes and diagnostics are in
+`scan_checks.details_json`.
+
+## Exercise CVE-2026-76904 on GeoServer 2.28.2
+
+GeoServer **2.28.2** is within this CVE's affected range, but the deployment must
+publish a qualifying PostGIS layer. The base image's sample layers alone do not
+establish that prerequisite. The optional demo keeps your GeoServer version and
+adds a PostgreSQL 16/PostGIS service with two synthetic rows and a limited,
+read-only database login.
+Source: [GeoServer advisory](https://github.com/geoserver/geoserver/security/advisories/GHSA-jvpx-6qxg-whgc).
+
+These commands use this project's Docker Compose network:
+
+```sh
+docker compose --profile sqli-demo up -d --wait
+python3 scripts/setup_sqli_demo.py
+cargo install --path crates/geoscan --locked --force
+geoscan scan
+```
+
+Wait until your GeoServer web page opens before running setup. The setup script
+uses Python's standard library, prompts for the GeoServer administrator password
+(or reads `GEOSCAN_PASSWORD`), and creates the demo workspace, datastore, and layer.
+It supports `--target` and `--username`, accepts only local targets, and does not
+overwrite existing resources that belong to another configuration. Rerunning it
+reuses the matching demo resources. The PostgreSQL service has no published host
+port; its fixed credentials are for this learning lab only.
+
+For an unpatched 2.28.2 deployment with the demo available, the expected pattern is:
+
+```text
+[no_match] CVE-2025-27505 (0 matches)
+[matches] CVE-2026-76904 (1 matches)
+```
+
+These are expected outcomes, not a claim that a live Docker scan was verified in
+the restricted development environment. A locally patched library, protected WFS,
+different error handling, or unsupported function evaluation can change the result.
+Keep the match evidence and per-check diagnostics when investigating a difference.
+The scan requests leave the demo configuration and data unchanged.
 
 ## Read assessment results
 
@@ -244,13 +322,14 @@ opens its principal advisory; additional source records are in the JSON catalogu
 
 These 32 research records do not imply 32 executable Nuclei checks.
 
-- `ReadOnly`: CVE-2025-27505 has a reviewed GET-based template mapping.
+- `ReadOnly`: CVE-2025-27505 and CVE-2026-76904 have reviewed GET-based templates.
 - `LabOnly`: CVE-2024-36401 and CVE-2025-30220 have intrusive or external-callback
   template mappings.
-- `Unreviewed`: the other 29 records have no active template mapped.
+- `Unreviewed`: the other 28 records have no active template mapped.
 
-`checks` commands execute no templates. `scan` selects only CVE-2025-27505,
-verifies its `ReadOnly` policy, and runs the embedded GET-based template.
+`checks` commands execute no templates. `scan` selects the two implemented CVEs,
+verifies their `ReadOnly` policies, and runs their embedded templates. SQLi schema
+preflight failures or unavailable prerequisites are reported separately.
 No `LabOnly` or `Unreviewed` checks are executed.
 
 ## Verify changes
@@ -260,7 +339,20 @@ cargo fmt --all --check
 cargo test --workspace --locked
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo build -p geoscan --locked
+python3 -m unittest discover -s scripts/tests -v
+nuclei -validate -templates crates/geoscan-core/templates/http/cves -disable-update-check -no-interactsh
 ```
+
+The optional Nuclei integration test replays the captured PostgreSQL JDBC error
+and checks positive and negative matcher cases against a local HTTP fixture.
+It needs Nuclei on `PATH` and permission to open a local socket:
+
+```sh
+cargo test -p geoscan-core --locked --test nuclei_sqli -- --ignored
+```
+
+Set `GEOSCAN_TEST_NUCLEI` to an executable path when Nuclei is outside `PATH`.
+This test uses synthetic responses and requires neither GeoServer nor PostGIS.
 
 Tests cover all requested IDs, affected/fixed boundaries, version scope, unknown
 versions, score/date provenance, invalid metadata, JSON export, CLI details, help
@@ -271,3 +363,7 @@ check IDs and match URLs, and saving findings and final status in SQLite.
 CLI input tests cover the Docker default, skipping login, invalid URLs, partial
 flags, password whitespace, missing script inputs, and keeping passwords out of
 error output.
+Additional tests cover SQLi argument validation, schema prerequisites, exact match
+URL scope, requiring the final SQLi request outcome, mixed scan results, retaining
+findings when another check fails, upgrading existing SQLite databases, and demo
+setup idempotence and credential handling.

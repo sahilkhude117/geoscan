@@ -3,7 +3,7 @@ use std::{path::PathBuf, process::ExitCode};
 use clap::{Parser, Subcommand};
 use geoscan_core::catalog::{CveCheck, VersionScope, VersionStatus, assess_version, load_catalog};
 use geoscan_core::detect::detect_geoserver;
-use geoscan_core::scan::scan_geoserver;
+use geoscan_core::scan::{DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget, scan_geoserver};
 use geoscan_core::{check_database, check_nuclei};
 
 mod scan_input;
@@ -44,7 +44,7 @@ enum Commands {
         command: CheckCommands,
     },
 
-    /// Run the reviewed read-only GeoServer check
+    /// Run the reviewed read-only GeoServer CVE checks
     Scan {
         /// Application URL; prompt when omitted in a terminal
         #[arg(long)]
@@ -57,6 +57,14 @@ enum Commands {
         /// Disable prompts for scripts; supply --target and any required credentials
         #[arg(long)]
         no_input: bool,
+
+        /// PostGIS WFS layer to check for CVE-2026-76904
+        #[arg(long, default_value = DEFAULT_LAYER, value_name = "WORKSPACE:LAYER")]
+        sqli_layer: String,
+
+        /// String attribute containing JSON in the selected layer
+        #[arg(long, default_value = DEFAULT_PROPERTY, value_name = "ATTRIBUTE")]
+        sqli_property: String,
 
         #[arg(long, default_value = "nuclei")]
         nuclei: PathBuf,
@@ -192,9 +200,18 @@ async fn main() -> ExitCode {
             target,
             username,
             no_input,
+            sqli_layer,
+            sqli_property,
             nuclei,
             db,
         } => {
+            let selected = match SqliTarget::new(&sqli_layer, &sqli_property) {
+                Ok(selected) => selected,
+                Err(error) => {
+                    eprintln!("Scan setup failed: {error}");
+                    return ExitCode::FAILURE;
+                }
+            };
             let input = match scan_input::collect_scan_input(target, username, no_input) {
                 Ok(input) => input,
                 Err(error) => {
@@ -206,10 +223,10 @@ async fn main() -> ExitCode {
             if input.auth().is_some() {
                 println!("Login will be used to detect the GeoServer version.");
             }
-            println!("Exposure check: unauthenticated request.");
-            println!("Running the reviewed GeoServer REST-index check...");
+            println!("Exposure checks: unauthenticated requests.");
+            println!("Running two reviewed GeoServer CVE checks...");
 
-            match scan_geoserver(&input.target, &nuclei, &db, input.auth()).await {
+            match scan_geoserver(&input.target, &nuclei, &db, input.auth(), &selected).await {
                 Ok(report) => {
                     println!("Scan ID: {}", report.id);
                     println!("Target: {}", report.target);
@@ -219,10 +236,23 @@ async fn main() -> ExitCode {
                     );
                     println!("Version check: {}", report.version_note);
                     println!("Status: {}", report.status);
-                    println!("Check: CVE-2025-27505");
+                    println!("Supported checks: {}", report.checks.len());
                     println!("Matches: {}", report.findings.len());
                     println!("Catalogue entries not run: {}", report.not_run);
                     println!("Saved to: {}", db.display());
+
+                    for check in &report.checks {
+                        println!(
+                            "[{}] {} ({} matches)",
+                            check.status, check.cve_id, check.matches
+                        );
+                        if !check.note.is_empty() {
+                            println!("  {}", check.note);
+                        }
+                        if let Some(error) = &check.error {
+                            eprintln!("  {} failed: {error}", check.cve_id);
+                        }
+                    }
 
                     for finding in &report.findings {
                         println!(
@@ -231,13 +261,17 @@ async fn main() -> ExitCode {
                         );
                     }
 
-                    println!("Results cover this check only; matches need verification.");
+                    println!("Results cover the checks run only; matches need verification.");
 
-                    if report.status == "inconclusive" {
-                        eprintln!("No request outcome was returned; inspect scans.diagnostics.");
-                        ExitCode::from(2)
-                    } else {
-                        ExitCode::SUCCESS
+                    match report.status.as_str() {
+                        "inconclusive" | "partial" => {
+                            eprintln!(
+                                "Some checks were incomplete; inspect scan_checks.details_json."
+                            );
+                            ExitCode::from(2)
+                        }
+                        "failed" => ExitCode::FAILURE,
+                        _ => ExitCode::SUCCESS,
                     }
                 }
 

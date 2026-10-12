@@ -13,10 +13,25 @@ fn scan_help_explains_optional_target_login_and_automation() {
     let output = run(&["scan", "--help"]);
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
-    for explanation in ["--target", "--username", "--no-input", "GEOSCAN_PASSWORD"] {
+    for explanation in [
+        "--target",
+        "--username",
+        "--no-input",
+        "GEOSCAN_PASSWORD",
+        "--sqli-layer",
+        "--sqli-property",
+    ] {
         assert!(stdout.contains(explanation));
     }
     assert!(stdout.contains("Usage: geoscan scan [OPTIONS]"));
+}
+
+#[test]
+fn invalid_sqli_identifiers_are_rejected_before_prompts_or_scan_requests() {
+    let output = run(&["scan", "--sqli-layer", "items&request=other"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("SQLi layer"));
+    assert!(output.stdout.is_empty());
 }
 
 #[test]

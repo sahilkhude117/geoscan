@@ -7,5 +7,22 @@ services:
     volumes:
       - geoserver_data:/opt/geoserver_data
 
+  postgis-demo:
+    image: postgis/postgis:16-3.5
+    profiles: [sqli-demo]
+    environment:
+      POSTGRES_DB: geoscan_demo
+      # Local demo credentials, never use these for a production database.
+      POSTGRES_PASSWORD: geoscan-postgres-demo-only
+    volumes:
+      - postgis_demo_data:/var/lib/postgresql/data
+      - ./lab/postgis/init.sql:/docker-entrypoint-initdb.d/01-geoscan.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -h 127.0.0.1 -U postgres -d geoscan_demo"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
 volumes:
   geoserver_data:
+  postgis_demo_data:
