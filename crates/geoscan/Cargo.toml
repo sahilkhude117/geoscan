@@ -1,5 +1,5 @@
 [package]
-name = "geoscan-cli"
+name = "geoscan"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true

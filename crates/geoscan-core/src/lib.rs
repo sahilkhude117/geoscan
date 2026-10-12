@@ -18,7 +18,10 @@ pub async fn check_nuclei(executable: &Path) -> Result<String, String> {
         .map_err(|error| format!("Could not run {}: {error}", executable.display()))?;
 
     if !output.status.success() {
-        return Err(format!("Nuclei version check exited with {}", output.status));
+        return Err(format!(
+            "Nuclei version check exited with {}",
+            output.status
+        ));
     }
 
     // Nuclei may write its version to stderr rather than stdout.
@@ -71,3 +74,5 @@ pub async fn check_database(path: &Path) -> Result<(), sqlx::Error> {
     connection.close().await?;
     Ok(())
 }
+
+pub mod detect;

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/geoscan-core", "crates/geoscan-cli"]
+members = ["crates/geoscan-core", "crates/geoscan"]
 resolver = "2"
 
 [workspace.package]
@@ -11,3 +11,6 @@ publish = false
 clap = { version = "4", features = ["derive"] }
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+roxmltree = "0.20"
+serde_json = "1"
