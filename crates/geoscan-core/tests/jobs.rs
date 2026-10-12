@@ -89,6 +89,7 @@ async fn jobs_are_persisted_bounded_and_link_to_the_same_cli_report() {
     let (dir, state, gate) = setup(false).await;
     assert_eq!(state.jobs(25, 0).await.unwrap().1, 0);
     let queued = state.submit(input()).await.unwrap();
+    assert!(queued.misconfigurations.private_layers.is_empty());
     assert_eq!(queued.state, "queued");
     assert!(matches!(state.submit(input()).await, Err(JobError::Busy)));
     let progress = wait(&state, queued.id, false).await;
@@ -235,5 +236,80 @@ async fn unexpected_runner_panic_becomes_a_failed_job() {
         job.error.as_deref(),
         Some("Scanner task stopped unexpectedly")
     );
+    state.shutdown().await;
+}
+
+#[tokio::test]
+async fn job_options_are_saved_and_old_job_schema_is_migrated() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("jobs.db");
+    geoscan_core::scan::initialize_database(&path)
+        .await
+        .unwrap();
+    let options = sqlx::sqlite::SqliteConnectOptions::new().filename(&path);
+    let mut db = SqliteConnection::connect_with(&options).await.unwrap();
+    sqlx::query("CREATE TABLE scan_jobs (id INTEGER PRIMARY KEY,state TEXT NOT NULL,target TEXT NOT NULL,sqli_layer TEXT NOT NULL,sqli_property TEXT NOT NULL,scan_id INTEGER,outcome TEXT,error TEXT,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,started_at TEXT,finished_at TEXT)").execute(&mut db).await.unwrap();
+    db.close().await.unwrap();
+    let gate = Arc::new(Notify::new());
+    let state = AppState::with_runner(
+        Config {
+            database: path,
+            ..Config::default()
+        },
+        Arc::new(Fixture {
+            gate: gate.clone(),
+            fail: false,
+        }),
+        ScannerStatus {
+            available: true,
+            version: None,
+            error: None,
+        },
+    )
+    .await
+    .unwrap();
+    let mut request = input();
+    request.misconfigurations.private_layers = vec!["private:items".into()];
+    request.misconfigurations.deployment = geoscan_core::misconfig::Deployment::Production;
+    let job = state.submit(request).await.unwrap();
+    assert_eq!(
+        job.misconfigurations.deployment,
+        geoscan_core::misconfig::Deployment::Production
+    );
+    assert_eq!(job.misconfigurations.private_layers, vec!["private:items"]);
+    wait(&state, job.id, false).await;
+    gate.notify_one();
+    wait(&state, job.id, true).await;
+    state.shutdown().await;
+}
+
+#[tokio::test]
+async fn historical_factory_opt_in_flags_do_not_break_saved_jobs() {
+    let (_dir, state, _gate) = setup(false).await;
+    let options = sqlx::sqlite::SqliteConnectOptions::new().filename(state.database());
+    let mut db = SqliteConnection::connect_with(&options).await.unwrap();
+    for legacy_enabled in [false, true] {
+        let options = serde_json::json!({
+            "check_default_credentials": legacy_enabled,
+            "private_layers": ["private:items"],
+            "deployment": "lab"
+        });
+        let id = sqlx::query("INSERT INTO scan_jobs (state,target,sqli_layer,sqli_property,options_json) VALUES ('completed',?,'demo:items','json_data',?)")
+            .bind("http://127.0.0.1:8080/geoserver/")
+            .bind(options.to_string())
+            .execute(&mut db).await.unwrap().last_insert_rowid();
+        let job = state.job(id).await.unwrap();
+        assert_eq!(job.misconfigurations.private_layers, vec!["private:items"]);
+        assert_eq!(
+            job.misconfigurations.deployment,
+            geoscan_core::misconfig::Deployment::Lab
+        );
+        assert!(
+            serde_json::to_value(&job).unwrap()["misconfigurations"]
+                .get("check_default_credentials")
+                .is_none()
+        );
+    }
+    db.close().await.unwrap();
     state.shutdown().await;
 }

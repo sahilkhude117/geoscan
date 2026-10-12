@@ -7,7 +7,7 @@ use std::{future::Future, path::PathBuf, pin::Pin, sync::Arc};
 use crate::{
     check_nuclei,
     detect::normalize_target,
-    scan::{ScanReport, SqliTarget, initialize_database, scan_geoserver_tracked},
+    scan::{ScanReport, SqliTarget, initialize_database, scan_geoserver_with_options},
 };
 use serde::{Deserialize, Serialize};
 use sqlx::{SqlitePool, sqlite::SqliteConnectOptions};
@@ -43,6 +43,8 @@ pub struct ScanRequest {
     pub sqli_layer: String,
     #[serde(default = "default_property")]
     pub sqli_property: String,
+    #[serde(default)]
+    pub misconfigurations: crate::misconfig::Options,
 }
 
 fn default_layer() -> String {
@@ -77,12 +79,13 @@ impl ScanRunner for NativeRunner {
         Box::pin(async move {
             let selected = SqliTarget::new(&request.sqli_layer, &request.sqli_property)?;
             let auth = request.username.as_deref().zip(request.password.as_deref());
-            scan_geoserver_tracked(
+            scan_geoserver_with_options(
                 &request.target,
                 &config.engine,
                 &config.database,
                 auth,
                 &selected,
+                &request.misconfigurations,
                 Some(started),
             )
             .await
@@ -212,7 +215,7 @@ impl AppState {
             .await?
             .into_iter()
             .map(jobs::from_row)
-            .collect();
+            .collect::<Result<Vec<_>, _>>()?;
         Ok((items, total))
     }
 }

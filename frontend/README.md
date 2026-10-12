@@ -8,7 +8,7 @@ Read `AGENTS.md` and the relevant installed Next.js guides before changing Next.
 
 Use separate terminals. Backend commands run from the **repository root**, not from `frontend/`, so the API shares the CLI's `geoscan.db`.
 
-Prerequisites: Rust supporting edition 2024, Docker Compose, Python 3, a working `nuclei` executable on the backend's PATH, and Node.js **22.18+** for the TypeScript client tests (Next.js itself supports 20.9+). Use `geoscan doctor` if your CLI is already installed.
+Prerequisites: Rust supporting edition 2024, Docker Compose, Python 3, a working `nuclei` executable for CVE checks, and Node.js **22.18+** for the TypeScript client tests (Next.js itself supports 20.9+). Configuration-only scans use the built-in Rust HTTP probes and do not require Nuclei. Use `geoscan doctor` if your CLI is already installed.
 
 ### 1. Start the existing demo target (repository root)
 
@@ -27,7 +27,7 @@ The application does not provision GeoServer or upload layers when starting a sc
 cargo run -p geoscan-api --locked -- --db ./geoscan.db
 ```
 
-The API listens on **http://127.0.0.1:8787**. SQLite history is available even if the scanner executable is missing; `/health` exposes `scanner.available`. After installing or changing the executable, restart the API to refresh this startup diagnostic.
+The API listens on **http://127.0.0.1:8787**. SQLite history and configuration checks are available even if the CVE scanner executable is missing; `/health` exposes `scanner.available`. After installing or changing that executable, restart the API to refresh this startup diagnostic.
 
 To select another binary, database, port, or allowed target:
 
@@ -70,7 +70,7 @@ Replace the starter layout in `src/app/page.tsx` with the dashboard. Reuse:
 | `.env.example` | Local proxy configuration |
 | `tests/api.test.ts` | Client contract/lifecycle checks without a live server |
 
-Suggested screens: target/login form, scan progress, findings with expandable reproduction steps, saved scan history, and CVE catalogue. Add the optional advanced `sqli_layer` and `sqli_property` inputs for real deployments. Use `/health` for allowed targets, defaults and supported check IDs. Style these screens freely while preserving the contract below.
+Suggested screens: target/login form, scan progress, findings with expandable reproduction steps, saved scan history, and check catalogue. Add the optional advanced `sqli_layer` and `sqli_property` inputs for real deployments. The starter now includes configuration-only mode, deployment context, and declared private layers. The factory-login check runs automatically on every scan. Use `/health` for allowed targets, defaults and supported check IDs. Style these screens freely while preserving the contract below.
 
 The Rust implementation is in `../crates/geoscan-api/src/` (HTTP transport), `../crates/geoscan-core/src/web/` (durable background jobs), and `../crates/geoscan-core/src/scan.rs` (shared scanner/report reader). SQLite belongs to Rust; the Next.js app should use HTTP instead of opening the database or spawning the scanner.
 
@@ -81,7 +81,7 @@ All successful responses are JSON. Every API response has `Cache-Control: no-sto
 | Method | Path | Response |
 | --- | --- | --- |
 | GET | `/health` | `Health`: startup scanner availability, allowed targets, defaults, coverage |
-| GET | `/checks` | `Catalog`: all researched entries plus `supported_checks` |
+| GET | `/checks` | `Catalog`: CVE `items`, CVE `supported_checks`, and implemented `misconfigurations` |
 | POST | `/detect` | `Detection`: GeoServer identity/version, WMS/WFS availability and evidence; does not start a vulnerability scan |
 | POST | `/scans` | **202** `Job`, with `Location: /api/v1/jobs/{id}` |
 | GET | `/jobs/{id}` | `Job`: poll a submitted job |
@@ -103,7 +103,67 @@ Both POST endpoints accept `ScanInput`:
 }
 ```
 
-Only `target` is required. Omit the SQLi fields to use the values from `health.defaults`. Optional `username` and `password` must both be present and nonempty, or both omitted/null. Blank UI inputs should be omitted. Login is used only to identify the GeoServer version; vulnerability probes remain anonymous. Credentials are never saved in jobs, scan history or reports, and are not forwarded to the scanning engine. Clear the password field after submission; do not put it in browser storage, URLs or logs.
+Only `target` is required. Omit the SQLi fields to use the values from `health.defaults`. Optional `username` and `password` must both be present and nonempty, or both omitted/null. Blank UI inputs should be omitted. This supplied login is used only to identify the GeoServer version. Credentials are never saved in jobs, scan history or reports, and are not forwarded to the scanning engine or configuration probes. Every scan includes a check for the fixed factory admin/geoserver login, with at most one authentication attempt after an anonymous-denied baseline. Clear the password field after submission; do not put it in browser storage, URLs or logs.
+
+## Configuration checks
+
+Default scans run the two existing CVE probes and eleven configuration assessments. Private-layer and production-transport assessments require a declared policy, so a recorded check is not necessarily an executed probe. These findings have project-assigned risk severity; no CVSS score or CVE number is invented.
+
+| ID | Assessment | Activation |
+| --- | --- | --- |
+| `GS-MISC-001` | Factory admin/geoserver credentials, with an anonymous-denied baseline | Every scan; at most one authentication attempt |
+| `GS-MISC-002` | Anonymous workspace REST configuration reads | Default |
+| `GS-MISC-003` | Anonymous named GeoWebCache layer configuration reads | Default; public tile access alone is not a finding |
+| `GS-MISC-004` | Anonymous REST status/system diagnostics | Default |
+| `GS-MISC-005` | Java implementation, SQL or internal-path leakage in a bounded invalid WFS request | Default |
+| `GS-MISC-006` | Known private configuration/backup files or a data-directory index | Default; four fixed application-relative paths |
+| `GS-MISC-007` | Anonymous GeoJSON access to existing layers declared private | Operator names up to five private layers |
+| `GS-MISC-008` | Reflection of two untrusted origins with credentialed CORS on a configuration route | Default; proves header policy, not authenticated data access |
+| `GS-MISC-009` | Production HTTP without HTTPS enforcement, or missing positive HSTS on HTTPS | Explicit production context; HSTS absence is rated Low |
+| `GS-MISC-010` | Session-cookie HttpOnly/Secure/SameSite=None weaknesses | Default; Secure is required on HTTPS, not a plain-HTTP localhost lab |
+| `GS-MISC-011` | Enforced CSP, framing restrictions and nosniff on administration HTML | Default; CSP frame-ancestors can replace X-Frame-Options |
+
+Ordinary public WFS/WMS layers and wildcard CORS on public maps are not automatically vulnerabilities. Missing SameSite alone is not a finding. Lab/unspecified deployment contexts skip production transport assessment. Selecting production explicitly applies that policy even to a loopback test target. Login pages/errors/soft 404s must not be mistaken for successful configuration or feature responses.
+
+Probe limits: GET requests only, at most five per second, five-second request timeout, 64 KiB response limit, and a forty-second overall configuration budget. Only same-application administration-page redirects are followed, at most twice; external or HTTPS-upgrade redirects are assessed without following them. Probes do not use an ambient HTTP proxy. Private-layer reads request at most one feature. Response bodies, cookie values, configuration secrets and feature values are not retained in evidence. Timeout/unsupported responses remain inconclusive instead of becoming clean results.
+
+From the repository root, install/update the CLI and run configuration checks:
+
+```bash
+cargo install --path crates/geoscan --locked --force
+geoscan misconfigurations
+geoscan scan --only-misconfigurations
+```
+
+The target and optional version login use the existing prompts. The factory-login check is mandatory in both ordinary and configuration-only scans; it has no CLI flag, API toggle or frontend checkbox. If the anonymous baseline is already accessible, the factory-login result is inconclusive because that response cannot prove authentication worked; the anonymous configuration exposure is assessed separately. Historical jobs containing the old opt-in flag remain readable.
+
+For an existing layer that should be protected:
+
+```bash
+geoscan scan --target http://127.0.0.1:8080/geoserver --no-input \
+  --only-misconfigurations --private-layer private_workspace:confidential_layer
+```
+
+Repeat `--private-layer` for additional names (maximum five; no duplicates). Do not mark the intentionally public SQLi demo layer private just to create a finding. Add `--deployment production` when assessing a deployment against production transport requirements, or `--deployment lab` to state lab context.
+
+The same options are accepted through POST `/scans` in the optional nested `misconfigurations` object:
+
+```json
+{
+  "target": "http://127.0.0.1:8080/geoserver",
+  "misconfigurations": {
+    "only_misconfigurations": true,
+    "private_layers": [],
+    "deployment": "lab"
+  }
+}
+```
+
+All option fields have defaults: false, false, empty array, `unspecified`. Unknown fields are rejected. Selected options are saved with the job, without version-login credentials. Jobs from the earlier schema are migrated with default options. GET `/health` adds `supported_misconfiguration_checks`; `supported_checks` continues to mean executable CVE checks. GET `/checks` adds the `misconfigurations` definition array while keeping the CVE `items` unchanged.
+
+Each finding/check now has `check_id` and `kind` (`cve` or `misconfiguration`). `cve_id` remains the CVE ID for CVE findings and is **null** for configuration findings. Check results also have nullable `severity`. Use `check_id` for labels/keys and `kind` for classification. Configuration findings have `cvss: []`; show the supplied risk severity without a numerical CVSS label. `advisory_url` points to configuration guidance for these findings. Old CVE reports are enriched with their identifiers when read; earlier report/check data remains usable.
+
+`report.not_run` counts omitted **CVE catalogue entries only**, never subtracting configuration checks from CVE coverage. Overall status includes both check types and retains partial findings. Missing Nuclei in a mixed scan records failed CVE checks while still running configuration checks. Configuration-only mode skips CVE requests and the Nuclei version check. A `no_match` result covers only the fixed endpoints and declared layers examined.
 
 Targets must be complete HTTP(S) application URLs with no embedded credentials, query or fragment. Rust normalizes the trailing slash and checks the backend's exact allowed-target list. The browser cannot choose an executable, database path, template or shell command. SQLi layer/property identifiers use the same validation as the CLI.
 
@@ -172,9 +232,9 @@ For custom hooks, call `api.startScan(input)`, `waitForJob(job.id, { signal, onU
 | `failed` | A scan/check failed; show its error |
 | `running` | A persisted scan has not finished |
 
-Each check has `cve_id`, `status`, `ran`, `matches`, `reported_events`, `note`, `diagnostics`, and nullable `error`. Show notes for skipped/incomplete checks. A catalogue/version match is potential exposure, not a confirmed finding. **32 catalogue entries currently exist; only two CVE checks execute.** Use `supported_checks` to label coverage and `not_run` to show omissions. Never translate zero findings or a skipped check into “this server is secure.” Older CLI reports can have no recorded per-check coverage.
+Each check has `check_id`, `kind`, nullable `cve_id`/`severity`, `status`, `ran`, `matches`, `reported_events`, `note`, `diagnostics`, and nullable `error`. Show notes for skipped/incomplete checks. A catalogue/version match is potential exposure, not a confirmed finding. **32 CVE catalogue entries currently exist; two CVE checks and eleven configuration assessments are implemented.** Use the two supported-check lists to label coverage and `not_run` for omitted CVEs. Never translate zero findings or a skipped check into “this server is secure.” Older CLI reports can have no recorded per-check coverage.
 
-Each finding includes severity (`critical`, `high`, `medium`, `low`), an ordered `cvss` array with source links, `description`, `matched_at`, `evidence`, `remediation`, `advisory_url`, and `reproduction`. The first CVSS rating determines displayed severity; retain alternative sourced scores in details. Each reproduction step has `title`, `command`, and `expected`. Display commands in a scrollable `<pre>`, offer copying, and preserve the exact string. The app must not execute these shell commands in the browser. Render all returned text as text, not HTML.
+Each finding includes severity (`critical`, `high`, `medium`, `low`), an ordered `cvss` array with source links, `description`, `matched_at`, `evidence`, `remediation`, `advisory_url`, and `reproduction`. The first CVSS rating determines CVE severity; retain alternative sourced scores in details. Configuration risk has no numeric CVSS rating. Each reproduction step has `title`, `command`, and `expected`. Display commands in a scrollable `<pre>`, offer copying, and preserve the exact string. The factory-login reproduction prompts for its known factory password; it never embeds the operator's supplied password. The app must not execute these shell commands in the browser. Render all returned text as text, not HTML.
 
 The SQLi match demonstrates a generated-SQL quoting error on a selected public PostGIS layer, not arbitrary SQL execution. HTTP 200 can contain an XML service exception. The normal/probe reproduction steps explain the expected differences.
 
@@ -222,6 +282,6 @@ npm run build
 
 `npm run build -- --webpack` is available when a restricted environment cannot open the local sockets used by Turbopack's CSS workers. Builds do not download Google Fonts; the starter uses system fonts.
 
-Implementation-session verification: the shared Rust CLI/core and background-job tests passed (80 tests, including timeout/panic handling; one optional real-Nuclei HTTP test remains ignored), frontend TypeScript/lint and five client tests passed, and the frontend production build passed with webpack. Rust CLI/core/job tests and Clippy ran in an isolated workspace excluding the HTTP adapter, whose crate archives were not cached and whose package-registry downloads were blocked. Axum HTTP tests could not run in that session. Run the full workspace commands above and the live smoke test on your development machine before treating HTTP integration as verified.
+Configuration-check verification: 97 Rust CLI/core and background-job tests passed, including automatic factory-login checks, configuration probes, evidence redaction, saved reports and historical job-options compatibility; one optional real-Nuclei HTTP test remains ignored. Frontend TypeScript and lint checks passed. Rust checks ran in an isolated workspace excluding the HTTP adapter, whose crate archives were not cached and whose package-registry downloads were blocked. The Axum HTTP adapter and live API/UI integration remain unverified in this session. Run the full workspace commands above and the live smoke test on your development machine before treating HTTP integration as verified.
 
-The scanner uses Nuclei as its HTTP execution engine. GeoScan's Rust code owns scope/parameter validation, reviewed template selection, evidence validation, job lifecycle, database persistence and reports. Credit the engine in the project's technical explanation while keeping the UI branded GeoScan.
+CVE probes use Nuclei as their HTTP execution engine. Configuration probes use bounded Rust HTTP requests for context-dependent header/cookie and access assessments. GeoScan's Rust code owns scope/parameter validation, reviewed template selection, evidence validation, job lifecycle, database persistence and reports. Credit the engine in the project's technical explanation while keeping the UI branded GeoScan. Live API/UI testing and access control remain later project work.

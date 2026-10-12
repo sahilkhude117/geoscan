@@ -1,10 +1,10 @@
 use reqwest::Url;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use super::{REST_CHECK, SQLI_CHECK, SqliTarget, same_endpoint};
 use crate::detect::normalize_target;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ReproductionStep {
     pub title: String,
     pub command: String,

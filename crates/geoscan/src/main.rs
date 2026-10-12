@@ -3,8 +3,9 @@ use std::{path::PathBuf, process::ExitCode};
 use clap::{Parser, Subcommand};
 use geoscan_core::catalog::{CveCheck, VersionScope, VersionStatus, assess_version, load_catalog};
 use geoscan_core::detect::detect_geoserver;
+use geoscan_core::misconfig::{Deployment, MisconfigurationOptions};
 use geoscan_core::scan::{
-    DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget, read_scan_report, scan_geoserver,
+    DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget, read_scan_report, scan_geoserver_with_options,
 };
 use geoscan_core::{check_database, check_nuclei};
 
@@ -21,6 +22,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// List implemented configuration checks and their activation requirements
+    Misconfigurations {
+        #[arg(long)]
+        json: bool,
+    },
     /// Check Nuclei availability and SQLite read/write access
     Doctor {
         /// Database file to open or create (relative to the current directory)
@@ -61,7 +67,7 @@ enum Commands {
         json: bool,
     },
 
-    /// Run the reviewed read-only GeoServer CVE checks
+    /// Run the reviewed GeoServer CVE and configuration checks
     Scan {
         /// Application URL; prompt when omitted in a terminal
         #[arg(long)]
@@ -86,6 +92,18 @@ enum Commands {
         /// String attribute containing JSON in the selected layer
         #[arg(long, default_value = DEFAULT_PROPERTY, value_name = "ATTRIBUTE")]
         sqli_property: String,
+
+        /// Run configuration checks without requiring Nuclei
+        #[arg(long)]
+        only_misconfigurations: bool,
+
+        /// An existing WFS layer that should deny anonymous reads (repeat; max five)
+        #[arg(long, value_name = "WORKSPACE:LAYER")]
+        private_layer: Vec<String>,
+
+        /// Explicit deployment context for production transport checks
+        #[arg(long,default_value="unspecified",value_parser=["unspecified","lab","production"])]
+        deployment: String,
 
         #[arg(long, default_value = "nuclei")]
         nuclei: PathBuf,
@@ -124,6 +142,29 @@ async fn main() -> ExitCode {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Misconfigurations { json } => match geoscan_core::misconfig::catalog() {
+            Ok(checks) => {
+                if json {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&checks)
+                            .expect("serializable check definitions")
+                    );
+                } else {
+                    for check in checks {
+                        println!(
+                            "{} [{:?}] {} · {}",
+                            check.id, check.severity, check.name, check.activation
+                        );
+                    }
+                }
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("Could not load configuration definitions: {error}");
+                ExitCode::FAILURE
+            }
+        },
         Commands::Doctor { db, nuclei } => {
             println!("Checking GeoScan prerequisites...\n");
             let mut ready = true;
@@ -238,9 +279,25 @@ async fn main() -> ExitCode {
             json,
             sqli_layer,
             sqli_property,
+            only_misconfigurations,
+            private_layer,
+            deployment,
             nuclei,
             db,
         } => {
+            let options = MisconfigurationOptions {
+                only_misconfigurations,
+                private_layers: private_layer,
+                deployment: match deployment.as_str() {
+                    "production" => Deployment::Production,
+                    "lab" => Deployment::Lab,
+                    _ => Deployment::Unspecified,
+                },
+            };
+            if let Err(error) = options.validate() {
+                eprintln!("Scan setup failed: {error}");
+                return ExitCode::FAILURE;
+            }
             let selected = match SqliTarget::new(&sqli_layer, &sqli_property) {
                 Ok(selected) => selected,
                 Err(error) => {
@@ -259,14 +316,30 @@ async fn main() -> ExitCode {
             if !json {
                 println!("\nGeoScan | Scanning your GeoServer");
                 if input.auth().is_some() {
-                    println!("Login: version detection only · Exposure checks: anonymous");
+                    println!("Login: version detection only · CVE probes: anonymous");
                 } else {
-                    println!("Exposure checks: anonymous");
+                    println!("CVE probes: anonymous");
                 }
-                println!("Running 2 reviewed checks...\n");
+                println!(
+                    "Factory-login check: included · at most one admin/geoserver authentication attempt"
+                );
+                println!(
+                    "Running {} CVE checks and 11 configuration assessments...\n",
+                    if options.only_misconfigurations { 0 } else { 2 }
+                );
             }
 
-            match scan_geoserver(&input.target, &nuclei, &db, input.auth(), &selected).await {
+            match scan_geoserver_with_options(
+                &input.target,
+                &nuclei,
+                &db,
+                input.auth(),
+                &selected,
+                &options,
+                None,
+            )
+            .await
+            {
                 Ok(report) => {
                     if let Err(error) = scan_output::print(&report, &db, json) {
                         eprintln!("Could not display report: {error}");

@@ -11,6 +11,7 @@ pub struct Job {
     pub target: String,
     pub sqli_layer: String,
     pub sqli_property: String,
+    pub misconfigurations: crate::misconfig::Options,
     pub scan_id: Option<i64>,
     pub outcome: Option<String>,
     pub error: Option<String>,
@@ -19,20 +20,30 @@ pub struct Job {
     pub finished_at: Option<String>,
 }
 
-pub(crate) fn from_row(row: sqlx::sqlite::SqliteRow) -> Job {
-    Job {
+pub(crate) fn from_row(row: sqlx::sqlite::SqliteRow) -> Result<Job, JobError> {
+    let options: String = row.get("options_json");
+    let mut options: serde_json::Value =
+        serde_json::from_str(&options).map_err(|_| JobError::Database)?;
+    // Historical jobs stored this opt-in flag. The check is now mandatory;
+    // discard that flag when reading history, without accepting it in new requests.
+    if let Some(options) = options.as_object_mut() {
+        options.remove("check_default_credentials");
+    }
+    let misconfigurations = serde_json::from_value(options).map_err(|_| JobError::Database)?;
+    Ok(Job {
         id: row.get("id"),
         state: row.get("state"),
         target: row.get("target"),
         sqli_layer: row.get("sqli_layer"),
         sqli_property: row.get("sqli_property"),
+        misconfigurations,
         scan_id: row.get("scan_id"),
         outcome: row.get("outcome"),
         error: row.get("error"),
         created_at: row.get("created_at"),
         started_at: row.get("started_at"),
         finished_at: row.get("finished_at"),
-    }
+    })
 }
 
 pub(crate) async fn initialize(pool: &SqlitePool) -> Result<(), String> {
@@ -43,8 +54,12 @@ pub(crate) async fn initialize(pool: &SqlitePool) -> Result<(), String> {
             target TEXT NOT NULL, sqli_layer TEXT NOT NULL, sqli_property TEXT NOT NULL,
             scan_id INTEGER REFERENCES scans(id), outcome TEXT, error TEXT,
             created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
-            started_at TEXT, finished_at TEXT
+            started_at TEXT, finished_at TEXT, options_json TEXT NOT NULL DEFAULT '{}'
         )").execute(pool).await?;
+        let columns=sqlx::query("PRAGMA table_info(scan_jobs)").fetch_all(pool).await?;
+        if !columns.iter().any(|row|row.get::<String,_>("name")=="options_json") {
+            sqlx::query("ALTER TABLE scan_jobs ADD COLUMN options_json TEXT NOT NULL DEFAULT '{}'").execute(pool).await?;
+        }
         sqlx::query("CREATE UNIQUE INDEX IF NOT EXISTS one_active_api_job ON scan_jobs ((1)) WHERE state IN ('queued','running')")
             .execute(pool).await?;
         let mut transaction = pool.begin().await?;
@@ -66,6 +81,7 @@ pub(crate) async fn get(pool: &SqlitePool, id: i64) -> Result<Job, JobError> {
         .fetch_optional(pool)
         .await?
         .map(from_row)
+        .transpose()?
         .ok_or(JobError::NotFound)
 }
 
@@ -77,11 +93,12 @@ pub(crate) async fn submit(state: AppState, request: ScanRequest) -> Result<Job,
         .try_acquire_owned()
         .map_err(|_| JobError::Busy)?;
     let result = sqlx::query(
-        "INSERT INTO scan_jobs (state,target,sqli_layer,sqli_property) VALUES ('queued',?,?,?)",
+        "INSERT INTO scan_jobs (state,target,sqli_layer,sqli_property,options_json) VALUES ('queued',?,?,?,?)",
     )
     .bind(&request.target)
     .bind(&request.sqli_layer)
     .bind(&request.sqli_property)
+    .bind(serde_json::to_string(&request.misconfigurations).map_err(|_|JobError::Database)?)
     .execute(&state.pool)
     .await
     .map_err(|error| {

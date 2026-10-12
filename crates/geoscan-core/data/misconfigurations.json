@@ -1,0 +1,101 @@
+[
+  {
+    "id": "GS-MISC-001",
+    "name": "Default administrator credentials",
+    "description": "The factory administrator login authenticates to a protected configuration endpoint.",
+    "severity": "high",
+    "remediation": "Change the factory administrator password and restrict administrative access.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/security/auth/web/",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-002",
+    "name": "Anonymous REST configuration access",
+    "description": "Administrative workspace configuration is readable without authentication.",
+    "severity": "medium",
+    "remediation": "Restrict configuration REST endpoints to the intended authenticated administrative roles.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/security/rest/",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-003",
+    "name": "Anonymous GeoWebCache configuration access",
+    "description": "A cache layer configuration is readable without authentication; public tile services are not assessed as private.",
+    "severity": "medium",
+    "remediation": "Restrict GeoWebCache configuration REST access while retaining intended public tile access.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/geowebcache/rest/",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-004",
+    "name": "Anonymous server diagnostics",
+    "description": "Server status or system metrics are readable through an unauthenticated administrative REST endpoint.",
+    "severity": "medium",
+    "remediation": "Require administrative authentication for status and system-diagnostic endpoints.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/security/rest/",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-005",
+    "name": "Verbose service error disclosure",
+    "description": "A bounded invalid service request reveals Java stack traces, SQL statements, or internal filesystem paths.",
+    "severity": "low",
+    "remediation": "Disable verbose exception reporting in production and retain detailed errors in protected server logs.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/configuration/global/",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-006",
+    "name": "Exposed configuration files or directory listing",
+    "description": "A known private configuration/backup path or GeoServer data directory is served over HTTP.",
+    "severity": "high",
+    "remediation": "Keep the data directory and WEB-INF outside public static-file mappings; remove public backups and directory indexes.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/datadirectory/structure/",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-007",
+    "name": "Declared private layer readable anonymously",
+    "description": "A layer explicitly declared private by the operator returns a GeoJSON FeatureCollection without authentication.",
+    "severity": "high",
+    "remediation": "Apply layer read rules for the intended roles and verify anonymous WFS access is denied.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/security/layer/",
+    "activation": "private_layers"
+  },
+  {
+    "id": "GS-MISC-008",
+    "name": "Untrusted credentialed CORS policy",
+    "description": "A configuration endpoint reflects untrusted origins and permits credentialed browser requests; authenticated data access is not demonstrated.",
+    "severity": "medium",
+    "remediation": "Allow only trusted origins for credentialed administrative routes; public-map wildcard CORS is not this finding.",
+    "reference_url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-009",
+    "name": "Production transport hardening",
+    "description": "A deployment explicitly declared production serves its administration page without HTTPS enforcement, or lacks HSTS on HTTPS.",
+    "severity": "medium",
+    "remediation": "Enforce HTTPS for production administration and configure an appropriate Strict-Transport-Security policy.",
+    "reference_url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Strict-Transport-Security",
+    "activation": "production"
+  },
+  {
+    "id": "GS-MISC-010",
+    "name": "Session cookie hardening",
+    "description": "A session cookie lacks HttpOnly, lacks Secure over HTTPS, or uses SameSite=None without Secure.",
+    "severity": "low",
+    "remediation": "Set HttpOnly on session cookies and Secure over HTTPS; choose SameSite deliberately for the authentication flow.",
+    "reference_url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+    "activation": "always"
+  },
+  {
+    "id": "GS-MISC-011",
+    "name": "Administration page browser protections",
+    "description": "The administration HTML page lacks an enforced CSP, effective framing restrictions, or MIME-sniffing protection.",
+    "severity": "low",
+    "remediation": "Configure an enforced CSP, frame-ancestors or X-Frame-Options, and X-Content-Type-Options: nosniff on administration HTML.",
+    "reference_url": "https://docs.geoserver.org/latest/en/user/security/csp/",
+    "activation": "always"
+  }
+]

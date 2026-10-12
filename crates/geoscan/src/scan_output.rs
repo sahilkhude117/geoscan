@@ -135,6 +135,8 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
         color,
     };
     let catalog = load_catalog().expect("validated bundled catalogue");
+    let configuration =
+        geoscan_core::misconfig::catalog().expect("validated configuration definitions");
     let ran = report.checks.iter().filter(|check| check.ran).count();
     let completed = report
         .checks
@@ -177,7 +179,7 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
     output.field("Severity", &counts.join(" · "));
     output.field(
         "Coverage",
-        &format!("{} catalogue entries not run", report.not_run),
+        &format!("{} CVE catalogue entries not run", report.not_run),
     );
     output.field("Saved to", &db.display().to_string());
     output.close();
@@ -194,21 +196,32 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
             writeln!(
                 output.text,
                 "  {:<19} {:<15} {:<10} MATCHES",
-                "CVE", "RESULT", "SEVERITY"
+                "CHECK", "RESULT", "SEVERITY"
             )
             .unwrap();
         }
         for check in &report.checks {
-            let rating = catalog
-                .iter()
-                .find(|entry| entry.id == check.cve_id)
-                .map(|entry| severity(entry.severity))
+            let rating = check
+                .severity
+                .or_else(|| {
+                    catalog
+                        .iter()
+                        .find(|entry| entry.id == check.id())
+                        .map(|entry| entry.severity)
+                })
+                .or_else(|| {
+                    configuration
+                        .iter()
+                        .find(|entry| entry.id == check.id())
+                        .map(|entry| entry.severity)
+                })
+                .map(severity)
                 .unwrap_or("UNKNOWN");
             let result = status(&check.status);
             if wide {
                 let row = format!(
                     "  {:<19} {:<15} {:<10} {}",
-                    clean(&check.cve_id),
+                    clean(check.id()),
                     result,
                     rating,
                     check.matches
@@ -218,7 +231,8 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
                 output.paragraph(
                     &format!(
                         "{} · {result} · {rating} · {} matches",
-                        check.cve_id, check.matches
+                        check.id(),
+                        check.matches
                     ),
                     "  ",
                 );
@@ -236,7 +250,7 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
     for (index, finding) in report.findings.iter().enumerate() {
         let level = severity(finding.severity);
         output.open(
-            &format!("Finding {} · {level} · {}", index + 1, finding.cve_id),
+            &format!("Finding {} · {level} · {}", index + 1, finding.id()),
             level,
         );
         output.field("Issue", &finding.name);
@@ -258,10 +272,25 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
             })
             .collect::<Vec<_>>()
             .join(" · ");
-        output.field("CVSS", &scores);
+        output.field(
+            "Type",
+            if finding.kind == geoscan_core::scan::CheckKind::Cve {
+                "CVE"
+            } else {
+                "Configuration"
+            },
+        );
+        output.field(
+            "CVSS",
+            if scores.is_empty() {
+                "Not assigned; project configuration-risk rating"
+            } else {
+                &scores
+            },
+        );
         output.field("Evidence", &finding.evidence);
         output.field("Fix", &finding.remediation);
-        output.field("Advisory", &finding.advisory_url);
+        output.field("Reference", &finding.advisory_url);
         output.close();
         writeln!(
             output.text,
@@ -270,7 +299,7 @@ pub fn render(report: &ScanReport, db: &Path, width: usize, color: bool) -> Stri
         )
         .unwrap();
         output.paragraph(
-            "Run these read-only requests without credentials against the same target.",
+            "Run the bounded requests against the same target; follow each step's authentication instructions.",
             "  ",
         );
         for (step_index, step) in finding.reproduction.iter().enumerate() {
@@ -337,7 +366,10 @@ mod tests {
             not_run: 31,
             findings: vec![],
             checks: vec![CheckResult {
-                cve_id: "CVE-2026-76904".into(),
+                check_id: "CVE-2026-76904".into(),
+                kind: geoscan_core::scan::CheckKind::Cve,
+                cve_id: Some("CVE-2026-76904".into()),
+                severity: None,
                 status: "inconclusive".into(),
                 ran: true,
                 reported_events: 0,

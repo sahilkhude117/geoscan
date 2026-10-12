@@ -57,6 +57,7 @@ async fn health(State(state): State<AppState>) -> Json<Value> {
         "scanner": state.scanner(),
         "allowed_targets": state.allowed_targets(),
         "supported_checks": SUPPORTED_CHECKS,
+        "supported_misconfiguration_checks": geoscan_core::misconfig::catalog().map(|checks|checks.into_iter().map(|check|check.id).collect::<Vec<_>>()).unwrap_or_default(),
         "catalog_entries": load_catalog().map(|catalog| catalog.len()).unwrap_or_default(),
         "max_active_scans": 1,
         "scan_timeout_seconds": 240,
@@ -68,6 +69,7 @@ async fn health(State(state): State<AppState>) -> Json<Value> {
 struct CatalogResponse {
     items: Vec<CveCheck>,
     supported_checks: &'static [&'static str],
+    misconfigurations: Vec<geoscan_core::misconfig::Definition>,
 }
 
 async fn checks() -> Result<Json<CatalogResponse>, ApiError> {
@@ -81,6 +83,13 @@ async fn checks() -> Result<Json<CatalogResponse>, ApiError> {
     Ok(Json(CatalogResponse {
         items,
         supported_checks: SUPPORTED_CHECKS,
+        misconfigurations: geoscan_core::misconfig::catalog().map_err(|_| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "catalog_error",
+                "Could not load configuration check definitions",
+            )
+        })?,
     }))
 }
 
@@ -123,6 +132,10 @@ fn validate(state: &AppState, request: &mut ScanRequest) -> Result<(), ApiError>
         }
     }
     SqliTarget::new(&request.sqli_layer, &request.sqli_property).map_err(ApiError::invalid)?;
+    request
+        .misconfigurations
+        .validate()
+        .map_err(ApiError::invalid)?;
     Ok(())
 }
 

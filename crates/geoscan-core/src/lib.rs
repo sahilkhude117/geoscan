@@ -80,5 +80,6 @@ pub async fn check_database(path: &Path) -> Result<(), sqlx::Error> {
 
 pub mod catalog;
 pub mod detect;
+pub mod misconfig;
 pub mod scan;
 pub mod web;

@@ -16,6 +16,14 @@ mod sqli;
 pub use reproduce::ReproductionStep;
 pub use sqli::{DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget};
 
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CheckKind {
+    #[default]
+    Cve,
+    Misconfiguration,
+}
+
 const REST_CHECK: &str = "CVE-2025-27505";
 const SQLI_CHECK: &str = "CVE-2026-76904";
 const CHECK_IDS: [&str; 2] = [REST_CHECK, SQLI_CHECK];
@@ -25,9 +33,13 @@ pub const SUPPORTED_CHECKS: &[&str] = &CHECK_IDS;
 const REST_TEMPLATE: &str = include_str!("../templates/http/cves/2025/CVE-2025-27505.yaml");
 const SQLI_TEMPLATE: &str = include_str!("../templates/http/cves/2026/CVE-2026-76904.yaml");
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Finding {
-    pub cve_id: String,
+    #[serde(default)]
+    pub check_id: String,
+    #[serde(default)]
+    pub kind: CheckKind,
+    pub cve_id: Option<String>,
     pub name: String,
     pub severity: Severity,
     pub matched_at: String,
@@ -54,7 +66,13 @@ pub struct ScanReport {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CheckResult {
-    pub cve_id: String,
+    #[serde(default)]
+    pub check_id: String,
+    #[serde(default)]
+    pub kind: CheckKind,
+    pub cve_id: Option<String>,
+    #[serde(default)]
+    pub severity: Option<Severity>,
     pub status: String,
     pub ran: bool,
     pub reported_events: usize,
@@ -64,10 +82,32 @@ pub struct CheckResult {
     pub error: Option<String>,
 }
 
+impl Finding {
+    pub fn id(&self) -> &str {
+        if self.check_id.is_empty() {
+            self.cve_id.as_deref().unwrap_or("")
+        } else {
+            &self.check_id
+        }
+    }
+}
+
+impl CheckResult {
+    pub fn id(&self) -> &str {
+        if self.check_id.is_empty() {
+            self.cve_id.as_deref().unwrap_or("")
+        } else {
+            &self.check_id
+        }
+    }
+}
+
 fn finding(check: &CveCheck, target: &str, matched_at: String) -> Result<Finding, String> {
     let (evidence, reproduction) = reproduce::steps(&check.id, target, &matched_at)?;
     Ok(Finding {
-        cve_id: check.id.clone(),
+        check_id: check.id.clone(),
+        kind: CheckKind::Cve,
+        cve_id: Some(check.id.clone()),
         name: check.name.clone(),
         severity: check.severity,
         matched_at,
@@ -115,20 +155,42 @@ pub async fn read_scan_report(database: &Path, scan_id: Option<i64>) -> Result<S
         .await
         .map_err(|error| error.to_string())?;
         for detail in details {
-            checks.push(
-                serde_json::from_str::<CheckResult>(&detail)
-                    .map_err(|error| format!("Invalid saved check: {error}"))?,
-            );
+            let mut check = serde_json::from_str::<CheckResult>(&detail)
+                .map_err(|error| format!("Invalid saved check: {error}"))?;
+            if check.check_id.is_empty() {
+                check.check_id = check
+                    .cve_id
+                    .clone()
+                    .ok_or("Saved check has no identifier")?;
+            }
+            if check.severity.is_none() {
+                check.severity = catalog
+                    .iter()
+                    .find(|entry| entry.id == check.id())
+                    .map(|entry| entry.severity);
+            }
+            checks.push(check);
         }
     }
-    let rows = sqlx::query("SELECT cve_id, matched_at FROM findings WHERE scan_id = ? ORDER BY id")
-        .bind(id)
-        .fetch_all(&mut db)
-        .await
-        .map_err(|error| error.to_string())?;
+    let rows = sqlx::query(
+        "SELECT cve_id, matched_at, details_json FROM findings WHERE scan_id = ? ORDER BY id",
+    )
+    .bind(id)
+    .fetch_all(&mut db)
+    .await
+    .map_err(|error| error.to_string())?;
     let mut findings = Vec::new();
     for row in rows {
         let cve_id: String = row.get("cve_id");
+        if cve_id.starts_with("GS-MISC-") {
+            findings.push(crate::misconfig::restore_finding(
+                &target,
+                &cve_id,
+                row.get("matched_at"),
+                row.get("details_json"),
+            )?);
+            continue;
+        }
         let check = catalog
             .iter()
             .find(|check| check.id == cve_id)
@@ -144,9 +206,12 @@ pub async fn read_scan_report(database: &Path, scan_id: Option<i64>) -> Result<S
         version_note: "Version stored with the saved scan".into(),
         status: row.get("status"),
         reported_events,
-        not_run: catalog
-            .len()
-            .saturating_sub(checks.iter().filter(|check| check.ran).count()),
+        not_run: catalog.len().saturating_sub(
+            checks
+                .iter()
+                .filter(|check| check.ran && check.kind == CheckKind::Cve)
+                .count(),
+        ),
         checks,
         findings,
     };
@@ -415,7 +480,7 @@ async fn save_completed(
              VALUES (?, ?, ?, ?, ?, ?)",
         )
         .bind(report.id)
-        .bind(&check.cve_id)
+        .bind(check.id())
         .bind(&check.status)
         .bind(check.reported_events as i64)
         .bind(check.matches as i64)
@@ -434,7 +499,7 @@ async fn save_completed(
              VALUES (?, ?, ?, ?)",
         )
         .bind(report.id)
-        .bind(&finding.cve_id)
+        .bind(finding.id())
         .bind(&finding.matched_at)
         .bind(details)
         .execute(&mut *transaction)
@@ -449,7 +514,7 @@ async fn save_completed(
             check
                 .error
                 .as_ref()
-                .map(|error| format!("{}: {error}", check.cve_id))
+                .map(|error| format!("{}: {error}", check.id()))
         })
         .collect::<Vec<_>>();
     let error = (!errors.is_empty()).then(|| errors.join("\n"));
@@ -475,8 +540,10 @@ async fn save_completed(
 fn overall_status(checks: &[CheckResult]) -> &'static str {
     let completed = checks
         .iter()
-        .any(|check| matches!(check.status.as_str(), "matches" | "no_match"));
-    let failed = checks.iter().any(|check| check.status == "failed");
+        .any(|check| check.matches > 0 || matches!(check.status.as_str(), "matches" | "no_match"));
+    let failed = checks
+        .iter()
+        .any(|check| matches!(check.status.as_str(), "failed" | "partial"));
     let inconclusive = checks.iter().any(|check| check.status == "inconclusive");
     if failed || inconclusive {
         if completed {
@@ -515,6 +582,28 @@ pub async fn scan_geoserver_tracked(
     selected: &SqliTarget,
     started: Option<tokio::sync::oneshot::Sender<i64>>,
 ) -> Result<ScanReport, String> {
+    scan_geoserver_with_options(
+        target,
+        executable,
+        database,
+        auth,
+        selected,
+        &crate::misconfig::Options::default(),
+        started,
+    )
+    .await
+}
+
+pub async fn scan_geoserver_with_options(
+    target: &str,
+    executable: &Path,
+    database: &Path,
+    auth: Option<(&str, &str)>,
+    selected: &SqliTarget,
+    options: &crate::misconfig::Options,
+    started: Option<tokio::sync::oneshot::Sender<i64>>,
+) -> Result<ScanReport, String> {
+    options.validate()?;
     let catalogue = load_catalog()?;
 
     for check_id in CHECK_IDS {
@@ -534,7 +623,11 @@ pub async fn scan_geoserver_tracked(
         return Err("GeoServer identification was inconclusive; scan not started".into());
     }
 
-    let engine_version = check_nuclei(executable).await?;
+    let engine_version = if options.only_misconfigurations {
+        Ok("builtin-http".to_owned())
+    } else {
+        check_nuclei(executable).await
+    };
     let mut db = open_database(database).await?;
 
     let id = sqlx::query(
@@ -544,8 +637,19 @@ pub async fn scan_geoserver_tracked(
     )
     .bind(&detection.target)
     .bind(detection.version.as_deref())
-    .bind(CHECK_IDS.join(","))
-    .bind(engine_version)
+    .bind(
+        CHECK_IDS
+            .iter()
+            .copied()
+            .chain(
+                crate::misconfig::catalog()?
+                    .iter()
+                    .map(|check| check.id.as_str()),
+            )
+            .collect::<Vec<_>>()
+            .join(","),
+    )
+    .bind(engine_version.as_deref().unwrap_or("unavailable"))
     .execute(&mut db)
     .await
     .map_err(|e| e.to_string())?
@@ -561,7 +665,10 @@ pub async fn scan_geoserver_tracked(
         for check_id in CHECK_IDS {
             let check = catalogue.iter().find(|entry| entry.id == check_id).expect("validated check");
             let mut outcome = CheckResult {
-                cve_id: check.id.clone(),
+                check_id: check.id.clone(),
+                kind: CheckKind::Cve,
+                cve_id: Some(check.id.clone()),
+                severity: Some(check.severity),
                 status: "inconclusive".into(),
                 ran: false,
                 reported_events: 0,
@@ -570,6 +677,18 @@ pub async fn scan_geoserver_tracked(
                 diagnostics: String::new(),
                 error: None,
             };
+            if options.only_misconfigurations {
+                outcome.status="not_applicable".into();
+                outcome.note="CVE probe was not selected in this configuration-only scan".into();
+                checks.push(outcome);
+                continue;
+            }
+            if let Err(error)=&engine_version {
+                outcome.status="failed".into();
+                outcome.error=Some(error.clone());
+                checks.push(outcome);
+                continue;
+            }
             if check_id == SQLI_CHECK {
                 match sqli::preflight(&detection.target, selected).await {
                     sqli::Eligibility::Ready => {},
@@ -617,9 +736,12 @@ pub async fn scan_geoserver_tracked(
             }
             checks.push(outcome);
         }
+        let configuration = crate::misconfig::scan(&detection.target,options).await?;
+        checks.extend(configuration.checks);
+        findings.extend(configuration.findings);
         let diagnostics = checks.iter()
             .filter(|check| !check.diagnostics.is_empty())
-            .map(|check| format!("{}: {}", check.cve_id, check.diagnostics))
+            .map(|check| format!("{}: {}", check.id(), check.diagnostics))
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -630,7 +752,7 @@ pub async fn scan_geoserver_tracked(
             version_note: detection.version_note.clone(),
             status: overall_status(&checks).into(),
             reported_events: checks.iter().map(|check| check.reported_events).sum(),
-            not_run: catalogue.len() - checks.iter().filter(|check| check.ran).count(),
+            not_run: catalogue.len() - checks.iter().filter(|check| check.ran && check.kind == CheckKind::Cve).count(),
             checks,
             findings,
         };
@@ -668,6 +790,60 @@ mod tests {
     // JSONL, matcher-status, omit-raw and omit-template options as our runner.
     const NUCLEI_NO_MATCH: &str = include_str!("../tests/fixtures/nuclei-no-match.jsonl");
 
+    #[tokio::test]
+    async fn configuration_findings_round_trip_without_using_up_cve_coverage() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("mixed.db");
+        let mut db = open_database(&path).await.unwrap();
+        let id=sqlx::query("INSERT INTO scans (target,check_id,engine_version,status) VALUES (?,'mixed','fixture','running')").bind(TARGET).execute(&mut db).await.unwrap().last_insert_rowid();
+        let definition = crate::misconfig::catalog()
+            .unwrap()
+            .into_iter()
+            .find(|entry| entry.id == "GS-MISC-002")
+            .unwrap();
+        let cfg = Finding {
+            check_id: definition.id.clone(),
+            kind: CheckKind::Misconfiguration,
+            cve_id: None,
+            name: definition.name,
+            severity: definition.severity,
+            matched_at: format!("{TARGET}/rest/workspaces.json"),
+            description: definition.description,
+            cvss: vec![],
+            remediation: definition.remediation,
+            advisory_url: definition.reference_url,
+            evidence: "Anonymous configuration response markers; body redacted".into(),
+            reproduction: vec![],
+        };
+        let mut configuration = outcome("GS-MISC-002", "matches");
+        configuration.kind = CheckKind::Misconfiguration;
+        configuration.cve_id = None;
+        configuration.severity = Some(Severity::Medium);
+        let report = ScanReport {
+            id,
+            target: TARGET.into(),
+            geoserver_version: None,
+            version_note: String::new(),
+            status: "matches".into(),
+            reported_events: 2,
+            not_run: 31,
+            checks: vec![outcome(REST_CHECK, "no_match"), configuration],
+            findings: vec![cfg],
+        };
+        save_completed(&mut db, &report, "").await.unwrap();
+        db.close().await.unwrap();
+        let restored = read_scan_report(&path, Some(id)).await.unwrap();
+        assert_eq!(restored.not_run, 31);
+        assert_eq!(restored.findings[0].cve_id, None);
+        assert_eq!(restored.findings[0].id(), "GS-MISC-002");
+        assert!(restored.findings[0].cvss.is_empty());
+        assert!(
+            restored.findings[0].reproduction[0]
+                .command
+                .contains("rest/workspaces.json")
+        );
+    }
+
     fn rest_endpoint() -> Url {
         Url::parse(&format!("{TARGET}/rest.html")).unwrap()
     }
@@ -688,7 +864,10 @@ mod tests {
 
     fn outcome(id: &str, status: &str) -> CheckResult {
         CheckResult {
-            cve_id: id.into(),
+            check_id: id.into(),
+            kind: CheckKind::Cve,
+            cve_id: Some(id.into()),
+            severity: None,
             status: status.into(),
             ran: status != "not_applicable",
             reported_events: 1,

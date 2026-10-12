@@ -9,6 +9,14 @@ export type ScanStatus =
   | "inconclusive"
   | "not_applicable";
 export type JobState = "queued" | "running" | "completed" | "failed" | "interrupted";
+export type CheckKind = "cve" | "misconfiguration";
+export type Deployment = "unspecified" | "lab" | "production";
+
+export interface MisconfigurationOptions {
+  only_misconfigurations?: boolean;
+  private_layers?: string[];
+  deployment?: Deployment;
+}
 
 export interface ScanInput {
   target: string;
@@ -16,6 +24,7 @@ export interface ScanInput {
   password?: string;
   sqli_layer?: string;
   sqli_property?: string;
+  misconfigurations?: MisconfigurationOptions;
 }
 
 export interface Job {
@@ -24,6 +33,7 @@ export interface Job {
   target: string;
   sqli_layer: string;
   sqli_property: string;
+  misconfigurations: MisconfigurationOptions;
   scan_id: number | null;
   outcome: ScanStatus | null;
   error: string | null;
@@ -47,7 +57,9 @@ export interface ReproductionStep {
 }
 
 export interface Finding {
-  cve_id: string;
+  check_id: string;
+  kind: CheckKind;
+  cve_id: string | null;
   name: string;
   severity: Severity;
   matched_at: string;
@@ -60,7 +72,10 @@ export interface Finding {
 }
 
 export interface CheckResult {
-  cve_id: string;
+  check_id: string;
+  kind: CheckKind;
+  cve_id: string | null;
+  severity: Severity | null;
   status: ScanStatus;
   ran: boolean;
   reported_events: number;
@@ -106,6 +121,7 @@ export interface Health {
   scanner: { available: boolean; version: string | null; error: string | null };
   allowed_targets: string[];
   supported_checks: string[];
+  supported_misconfiguration_checks: string[];
   catalog_entries: number;
   max_active_scans: number;
   scan_timeout_seconds: number;
@@ -153,4 +169,15 @@ export interface CveCheck {
 export interface Catalog {
   items: CveCheck[];
   supported_checks: string[];
+  misconfigurations: MisconfigurationDefinition[];
+}
+
+export interface MisconfigurationDefinition {
+  id: string;
+  name: string;
+  description: string;
+  severity: Severity;
+  remediation: string;
+  reference_url: string;
+  activation: "always" | "private_layers" | "production";
 }
