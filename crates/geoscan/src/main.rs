@@ -1,9 +1,9 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Parser, Subcommand};
-use geoscan_core::{check_database, check_nuclei};
-
+use geoscan_core::catalog::{CveCheck, VersionScope, VersionStatus, assess_version, load_catalog};
 use geoscan_core::detect::detect_geoserver;
+use geoscan_core::{check_database, check_nuclei};
 
 // Clap turns these Rust types into commands, flags, and --help text.
 #[derive(Parser)]
@@ -33,6 +33,35 @@ enum Commands {
 
         #[arg(long)]
         username: Option<String>,
+    },
+
+    /// List CVEs or assess a release version against the catalogue
+    Checks {
+        #[command(subcommand)]
+        command: CheckCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum CheckCommands {
+    /// List researched CVEs and their future probe policies
+    List {
+        /// Export all catalogue metadata as JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Show sources, scores, dates, requirements, and fixes for a CVE
+    Show {
+        #[arg(long, value_name = "CVE-ID")]
+        id: String,
+    },
+
+    /// Compare a release version with known affected ranges (no scan requests)
+    Assess {
+        /// GeoServer release, such as 2.28.2; omit it for an unknown assessment
+        #[arg(long, value_name = "VERSION")]
+        geoserver_version: Option<String>,
     },
 }
 
@@ -65,7 +94,7 @@ async fn main() -> ExitCode {
             }
 
             if ready {
-                println!("\nReady for Step 2: GeoServer detection.");
+                println!("\nPrerequisites are ready. Use detect or checks to continue.");
                 ExitCode::SUCCESS
             } else {
                 println!("\nFix the failed checks and run doctor again.");
@@ -125,6 +154,141 @@ async fn main() -> ExitCode {
                     ExitCode::FAILURE
                 }
             }
+        }
+
+        Commands::Checks { command } => match run_checks(command) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => {
+                eprintln!("Catalogue error: {error}");
+                ExitCode::FAILURE
+            }
+        },
+    }
+}
+
+fn run_checks(command: CheckCommands) -> Result<(), String> {
+    let checks = load_catalog()?;
+
+    match command {
+        CheckCommands::List { json: true } => {
+            let output = serde_json::to_string_pretty(&checks)
+                .map_err(|error| format!("Could not export catalogue: {error}"))?;
+            println!("{output}");
+        }
+        CheckCommands::List { json: false } => {
+            println!(
+                "Catalogue: {} CVEs (researched coverage; active probes are separate).",
+                checks.len()
+            );
+            for check in checks {
+                let rating = &check.cvss[0];
+                let published = check
+                    .publication_date()
+                    .expect("validated publication date");
+                println!(
+                    "{} [{:?} CVSS {:.1}] {} — {:?}; {:?}: {}{}",
+                    check.id,
+                    check.severity,
+                    rating.score,
+                    check.name,
+                    check.probe_policy,
+                    published.kind,
+                    published.date,
+                    if check.kev.is_some() {
+                        "; CISA KEV"
+                    } else {
+                        ""
+                    }
+                );
+            }
+        }
+        CheckCommands::Show { id } => {
+            let check = checks
+                .iter()
+                .find(|check| check.id.eq_ignore_ascii_case(&id))
+                .ok_or_else(|| format!("Unknown CVE ID: {id}"))?;
+            show_check(check);
+        }
+        CheckCommands::Assess { geoserver_version } => {
+            println!(
+                "Catalogue: {} CVEs (researched coverage; active probes are separate).",
+                checks.len()
+            );
+            println!(
+                "Version: {}",
+                geoserver_version.as_deref().unwrap_or("Unknown")
+            );
+            println!("Version assessment; configuration requirements are unverified.");
+            println!("OutsideAffectedRanges refers only to this catalogue, not overall security.");
+
+            for check in checks {
+                let status = assess_version(&check, geoserver_version.as_deref())?;
+                println!("{}: {status:?}", check.id);
+                if check.version_scope != VersionScope::GeoServer {
+                    println!("  Assessment note: {}", check.version_notes);
+                }
+                if status == VersionStatus::PotentiallyAffected {
+                    println!("  Requirements: {}", check.prerequisites.join("; "));
+                    println!("  Fixed releases: {}", check.fixed_versions.join(", "));
+                    println!("  Fix: {}", check.remediation);
+                    println!("  Advisory: {}", check.advisory_url);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn show_check(check: &CveCheck) {
+    println!("{}: {}", check.id, check.name);
+    println!("Type: {}", check.vulnerability_type);
+    println!("Component: {}", check.component);
+    println!("Description: {}", check.description);
+    println!("Authentication: {}", check.authentication);
+    println!("CWEs: {}", check.cwes.join(", "));
+    for rating in &check.cvss {
+        println!(
+            "CVSS {}: {:.1} [{:?}] — {}",
+            rating.version, rating.score, rating.severity, rating.source
+        );
+        if let Some(vector) = &rating.vector {
+            println!("  Vector: {vector}");
+        }
+    }
+    for date in &check.dates {
+        println!("{:?}: {} — {}", date.kind, date.date, date.source);
+    }
+    if let Some(kev) = &check.kev {
+        println!("CISA KEV: added {} — {}", kev.date_added, kev.source);
+    }
+    println!("Version scope: {:?}", check.version_scope);
+    println!("Affected ranges: {}", check.affected.join(" OR "));
+    if check.fixed_versions.is_empty() {
+        println!("Fixed releases: Unknown");
+    } else {
+        println!("Fixed releases: {}", check.fixed_versions.join(", "));
+    }
+    println!("Version notes: {}", check.version_notes);
+    println!("Requirements: {}", check.prerequisites.join("; "));
+    println!("Fix: {}", check.remediation);
+    println!("Advisory: {}", check.advisory_url);
+    println!("Probe policy: {:?}", check.probe_policy);
+    println!(
+        "Template: {}",
+        check.template.as_deref().unwrap_or("Not mapped")
+    );
+    println!("Probe notes: {}", check.template_notes);
+    println!("Researched: {}", check.researched_at);
+    for reference in &check.references {
+        println!("Reference: {reference}");
+    }
+    if let Some(reported) = &check.reported_metadata {
+        println!(
+            "User-reported metadata: CVSS {:.1} [{:?}], published {} (see sourced values above)",
+            reported.cvss_score, reported.severity, reported.published
+        );
+        if let Some(note) = &reported.publication_note {
+            println!("  Note: {note}");
         }
     }
 }
