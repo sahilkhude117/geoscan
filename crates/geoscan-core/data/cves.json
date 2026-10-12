@@ -2299,9 +2299,9 @@
       "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/76xxx/CVE-2026-76904.json",
       "https://nvd.nist.gov/vuln/detail/CVE-2026-76904"
     ],
-    "template": null,
-    "probe_policy": "unreviewed",
-    "template_notes": "No active template is mapped in this starter catalogue.",
+    "template": "http/cves/2026/CVE-2026-76904.yaml",
+    "probe_policy": "read_only",
+    "template_notes": "GeoScan's reviewed GET-only check compares a valid jsonArrayContains filter with an apostrophe-containing value on one selected layer/property. A match requires a successful baseline and a PostgreSQL quoting error or a PostgreSQL JDBC unterminated-identifier error with jsonb_path_exists SQL context. This is SQL-generation error evidence, not proof of arbitrary SQL execution. The check reads at most one feature per request, executes no additional SQL statements or time delays, and needs a publicly accessible PostGIS String/JSON layer. Version matching alone is not a finding.",
     "researched_at": "2026-10-12",
     "reported_metadata": null
   }

@@ -4,8 +4,7 @@ A Rust CLI for identifying GeoServer and comparing its release version with a
 researched CVE catalogue. The shared `geoscan-core` crate will also support a future
 web backend. `doctor` checks SQLite access and the Nuclei installation. `scan`
 runs reviewed REST-index and PostGIS JSON-filter checks and stores per-CVE
-outcomes in SQLite.
-Commands for browsing scan history are a future step.
+outcomes in SQLite. `report` displays a saved scan without sending requests.
 
 ## Run the CLI
 
@@ -33,6 +32,7 @@ cargo install --path crates/geoscan --locked --force
 geoscan checks list
 geoscan checks show --id CVE-2025-58360
 geoscan checks assess --geoserver-version 2.28.2
+geoscan report
 ```
 
 Export metadata for another program or the future web backend:
@@ -147,6 +147,46 @@ invented per-check outcomes. The legacy `scans.check_id` column stores the two
 supported IDs separated by a comma for new scans. Notes and diagnostics are in
 `scan_checks.details_json`.
 
+## Readable reports and reproduction steps
+
+`scan` and `report` use the same terminal layout: a summary card, a compact table
+of check results, and a finding card for each match. Findings show the vulnerability
+name, severity, sourced CVSS scores, evidence, remediation, advisory, and manual
+reproduction commands with expected responses. Commands use the saved target,
+selected layer, and attribute. The baseline and apostrophe probe remain GET requests.
+
+```sh
+geoscan report                      # Latest saved scan; no scan requests
+geoscan report --scan-id 7          # Your successful SQLi demo scan
+geoscan report --scan-id 7 --json > scan-7.json
+NO_COLOR=1 geoscan report --scan-id 7
+```
+
+Colors are enabled for supported terminals and disabled when output is redirected
+or `NO_COLOR` is set. Metadata wraps to the terminal width. The narrower layout
+stacks check results; copyable reproduction commands retain their exact contents.
+The severity column describes each CVE; the severity summary counts matched
+findings only. `NO MATCH`, `SKIPPED`, `INCONCLUSIVE`, and `FAILED` remain distinct.
+
+JSON reports include `findings[].cvss`, `description`, `evidence`, `remediation`,
+`advisory_url`, and `reproduction[]` (`title`, `command`, `expected`). These are
+shared backend data for the future React UI. New findings save these fields in
+`findings.details_json`. Reading an older scan regenerates metadata and commands
+from the bundled catalogue and saved match URL, preserving the original database.
+Older scans without per-check records show that coverage was not recorded.
+
+To export a new scan, supply the target explicitly:
+
+```sh
+geoscan scan --target http://127.0.0.1:8080/geoserver --json > scan.json
+```
+
+`--json` disables prompts and progress text. Use `GEOSCAN_PASSWORD` with
+`--username` if an authenticated version lookup is needed. Saved reports do not
+need credentials or a running GeoServer. The `report` command exits successfully
+when a report is displayed, including saved scans that were partial or failed;
+`scan` keeps its existing outcome-based exit codes.
+
 ## Exercise CVE-2026-76904 on GeoServer 2.28.2
 
 GeoServer **2.28.2** is within this CVE's affected range, but the deployment must
@@ -185,6 +225,113 @@ the restricted development environment. A locally patched library, protected WFS
 different error handling, or unsupported function evaluation can change the result.
 Keep the match evidence and per-check diagnostics when investigating a difference.
 The scan requests leave the demo configuration and data unchanged.
+
+## Classroom demonstration
+
+The issue is **CVE-2026-76904**, a SQL-injection vulnerability in GeoTools' PostGIS
+implementation of `jsonArrayContains`. GeoServer accepts an ordinary WFS filter
+and uses GeoTools to turn it into a SQL query. On affected releases, the filter's
+expected value can reach the SQL string without the needed escaping. An apostrophe
+inside ordinary data can therefore change SQL syntax. The CVE record rates it
+**9.8 Critical**; GeoServer's advisory records **9.1 Critical**. The report keeps
+both scores with their sources instead of averaging them. GeoServer 2.28.2 is in
+the affected branch; the first fixed 2.28 release is 2.28.5.
+Sources: [CVE record](https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2026/76xxx/CVE-2026-76904.json),
+[GeoServer advisory](https://github.com/geoserver/geoserver/security/advisories/GHSA-jvpx-6qxg-whgc).
+
+The project uses the following lab:
+
+| Component | Role |
+| --- | --- |
+| GeoServer 2.28.2 | Exposes WFS at `http://127.0.0.1:8080/geoserver/wfs` |
+| PostgreSQL 16 with PostGIS | Stores two synthetic points and JSON text |
+| `geoscan_reader` | Limited database login with SELECT access and read-only transactions |
+| `geoscan_sqli_demo:items` | Published WFS layer backed by `geoscan.items` |
+| `json_data` | String attribute with values such as `{"a":["x"]}` |
+| Rust CLI and shared core | Validate inputs, identify GeoServer, orchestrate checks, build reports |
+| Nuclei | Runs the two reviewed HTTP requests and response matchers |
+| SQLite | Stores scan, per-check, and finding records in `geoscan.db` |
+
+Both containers share this project's Compose network. GeoServer connects to the
+database using the internal name `postgis-demo`; PostgreSQL has no published host
+port. `lab/postgis/init.sql` creates the demo rows and limited database role.
+`scripts/setup_sqli_demo.py` uses an administrator login to publish the workspace,
+datastore, and layer; scanning uses public WFS access afterward.
+
+1. Start the containers and wait for the GeoServer web page to load:
+
+   ```sh
+   docker compose --profile sqli-demo up -d --wait
+   ```
+
+2. Publish the demo layer, entering your GeoServer administrator password:
+
+   ```sh
+   python3 scripts/setup_sqli_demo.py
+   ```
+
+3. Install the updated command and run the guided scan:
+
+   ```sh
+   cargo install --path crates/geoscan --locked --force
+   geoscan scan
+   ```
+
+   Accept the localhost target. Login is optional and used only to read the
+   version. The result should show one SQLi finding when the valid baseline and
+   quote-error probe meet the matcher conditions. REST-index exposure is normally
+   `NO MATCH` on this lab's release.
+
+4. Run the two curl commands printed under the SQLi finding. The first sends
+   `jsonArrayContains("json_data",'/a','x') = true` and should return GeoJSON.
+   The second sends `jsonArrayContains("json_data",'/a','x''') = true`; CQL's doubled
+   apostrophe represents a literal apostrophe inside the value. In this lab,
+   prepared statements can produce an XML exception containing:
+
+   ```text
+   Borrow prepareStatement from pool failed
+   Unterminated identifier ... in SQL SELECT ... jsonb_path_exists(...) ... Expected quote char
+   ```
+
+   HTTP 200 alone does not establish success: the response content is an OGC
+   exception, not the requested GeoJSON. The JDBC parser detects broken SQL while
+   preparing it. The demonstrated evidence is unsafe SQL generation and quote
+   handling; arbitrary SQL execution is not tested.
+
+5. Show the saved result and export it for your presentation:
+
+   ```sh
+   geoscan report
+   geoscan report --json > demo-report.json
+   ```
+
+Explain the implementation using this flow:
+
+```text
+Rust CLI -> geoscan-core -> Nuclei template -> GeoServer WFS
+                                                   |
+                                            GeoTools / JDBC
+                                                   |
+                                            PostgreSQL / PostGIS
+
+Nuclei JSONL -> Rust validation -> SQLite -> terminal / JSON report
+```
+
+`scan_input.rs` collects and validates the target and optional credentials.
+`detect.rs` identifies GeoServer using several endpoints and reads the version.
+`scan/sqli.rs` uses DescribeFeatureType to ensure the selected attribute is a
+String. `scan.rs` writes the embedded template into a temporary directory, starts
+the engine with direct arguments, bounds its runtime and request rate, validates
+the returned CVE and matched URL, and saves results transactionally. The template
+requires a successful GeoJSON baseline plus the specific PostgreSQL or JDBC
+quote-error signature in an OGC exception. `scan/reproduce.rs` generates manual
+commands from the validated match URL, and `scan_output.rs` renders the result.
+
+The student's contribution is the Rust orchestration, detection, reviewed checks,
+SQLite storage, catalogue, input validation, reports, and reproduction workflow.
+Nuclei provides the HTTP execution and matching engine; describe that dependency
+accurately when explaining the project. Only two of the 32 catalogue entries have
+implemented active checks, and the SQLi test covers one selected layer/attribute.
 
 ## Read assessment results
 

@@ -3,10 +3,13 @@ use std::{path::PathBuf, process::ExitCode};
 use clap::{Parser, Subcommand};
 use geoscan_core::catalog::{CveCheck, VersionScope, VersionStatus, assess_version, load_catalog};
 use geoscan_core::detect::detect_geoserver;
-use geoscan_core::scan::{DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget, scan_geoserver};
+use geoscan_core::scan::{
+    DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget, read_scan_report, scan_geoserver,
+};
 use geoscan_core::{check_database, check_nuclei};
 
 mod scan_input;
+mod scan_output;
 
 // Clap turns these Rust types into commands, flags, and --help text.
 #[derive(Parser)]
@@ -44,6 +47,20 @@ enum Commands {
         command: CheckCommands,
     },
 
+    /// Display a saved scan with severity and reproduction steps; sends no requests
+    Report {
+        /// Saved scan ID; omit to show the latest scan
+        #[arg(long, value_parser = clap::value_parser!(i64).range(1..))]
+        scan_id: Option<i64>,
+
+        #[arg(long, default_value = "geoscan.db")]
+        db: PathBuf,
+
+        /// Export the saved report as JSON
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Run the reviewed read-only GeoServer CVE checks
     Scan {
         /// Application URL; prompt when omitted in a terminal
@@ -57,6 +74,10 @@ enum Commands {
         /// Disable prompts for scripts; supply --target and any required credentials
         #[arg(long)]
         no_input: bool,
+
+        /// Export a structured JSON report; requires --target and disables prompts
+        #[arg(long)]
+        json: bool,
 
         /// PostGIS WFS layer to check for CVE-2026-76904
         #[arg(long, default_value = DEFAULT_LAYER, value_name = "WORKSPACE:LAYER")]
@@ -196,10 +217,25 @@ async fn main() -> ExitCode {
             }
         },
 
+        Commands::Report { scan_id, db, json } => match read_scan_report(&db, scan_id).await {
+            Ok(report) => match scan_output::print(&report, &db, json) {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(error) => {
+                    eprintln!("Report failed: {error}");
+                    ExitCode::FAILURE
+                }
+            },
+            Err(error) => {
+                eprintln!("Report failed: {error}");
+                ExitCode::FAILURE
+            }
+        },
+
         Commands::Scan {
             target,
             username,
             no_input,
+            json,
             sqli_layer,
             sqli_property,
             nuclei,
@@ -212,7 +248,7 @@ async fn main() -> ExitCode {
                     return ExitCode::FAILURE;
                 }
             };
-            let input = match scan_input::collect_scan_input(target, username, no_input) {
+            let input = match scan_input::collect_scan_input(target, username, no_input || json) {
                 Ok(input) => input,
                 Err(error) => {
                     eprintln!("Scan setup failed: {error}");
@@ -220,56 +256,25 @@ async fn main() -> ExitCode {
                 }
             };
 
-            if input.auth().is_some() {
-                println!("Login will be used to detect the GeoServer version.");
+            if !json {
+                println!("\nGeoScan | Scanning your GeoServer");
+                if input.auth().is_some() {
+                    println!("Login: version detection only · Exposure checks: anonymous");
+                } else {
+                    println!("Exposure checks: anonymous");
+                }
+                println!("Running 2 reviewed checks...\n");
             }
-            println!("Exposure checks: unauthenticated requests.");
-            println!("Running two reviewed GeoServer CVE checks...");
 
             match scan_geoserver(&input.target, &nuclei, &db, input.auth(), &selected).await {
                 Ok(report) => {
-                    println!("Scan ID: {}", report.id);
-                    println!("Target: {}", report.target);
-                    println!(
-                        "Version: {}",
-                        report.geoserver_version.as_deref().unwrap_or("Unknown")
-                    );
-                    println!("Version check: {}", report.version_note);
-                    println!("Status: {}", report.status);
-                    println!("Supported checks: {}", report.checks.len());
-                    println!("Matches: {}", report.findings.len());
-                    println!("Catalogue entries not run: {}", report.not_run);
-                    println!("Saved to: {}", db.display());
-
-                    for check in &report.checks {
-                        println!(
-                            "[{}] {} ({} matches)",
-                            check.status, check.cve_id, check.matches
-                        );
-                        if !check.note.is_empty() {
-                            println!("  {}", check.note);
-                        }
-                        if let Some(error) = &check.error {
-                            eprintln!("  {} failed: {error}", check.cve_id);
-                        }
+                    if let Err(error) = scan_output::print(&report, &db, json) {
+                        eprintln!("Could not display report: {error}");
+                        return ExitCode::FAILURE;
                     }
-
-                    for finding in &report.findings {
-                        println!(
-                            "[{:?}] {} at {}",
-                            finding.severity, finding.cve_id, finding.matched_at
-                        );
-                    }
-
-                    println!("Results cover the checks run only; matches need verification.");
 
                     match report.status.as_str() {
-                        "inconclusive" | "partial" => {
-                            eprintln!(
-                                "Some checks were incomplete; inspect scan_checks.details_json."
-                            );
-                            ExitCode::from(2)
-                        }
+                        "inconclusive" | "partial" => ExitCode::from(2),
                         "failed" => ExitCode::FAILURE,
                         _ => ExitCode::SUCCESS,
                     }

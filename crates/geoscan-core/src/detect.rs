@@ -49,7 +49,7 @@ impl HttpClient for Client {
     }
 }
 
-async fn read_body(response: &mut reqwest::Response) -> Result<String, String> {
+pub(crate) async fn read_body(response: &mut reqwest::Response) -> Result<String, String> {
     let mut body = Vec::new();
 
     while let Some(chunk) = response.chunk().await.map_err(|e| e.to_string())? {

@@ -20,10 +20,19 @@ fn scan_help_explains_optional_target_login_and_automation() {
         "GEOSCAN_PASSWORD",
         "--sqli-layer",
         "--sqli-property",
+        "--json",
     ] {
         assert!(stdout.contains(explanation));
     }
     assert!(stdout.contains("Usage: geoscan scan [OPTIONS]"));
+}
+
+#[test]
+fn json_scan_does_not_prompt_or_print_progress_without_a_target() {
+    let output = run(&["scan", "--json"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(output.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Supply --target"));
 }
 
 #[test]

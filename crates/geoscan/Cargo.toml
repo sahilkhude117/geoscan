@@ -14,3 +14,7 @@ geoscan-core = { path = "../geoscan-core" }
 tokio.workspace = true
 serde_json.workspace = true
 console.workspace = true
+
+[dev-dependencies]
+sqlx.workspace = true
+tempfile.workspace = true

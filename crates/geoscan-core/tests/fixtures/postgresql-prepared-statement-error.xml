@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<ServiceExceptionReport version="1.2.0"
+   xmlns="http://www.opengis.net/ogc"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.opengis.net/ogc http://schemas.opengis.net/wfs/1.0.0/OGC-exception.xsd">
+   <ServiceException>
+      java.lang.RuntimeException: java.io.IOException
+      java.io.IOExceptionBorrow prepareStatement from pool failed
+Unterminated identifier started at position 99 in SQL SELECT count(*) FROM &quot;geoscan&quot;.&quot;items&quot; WHERE jsonb_path_exists(&quot;json_data&quot;::jsonb, &apos;$ ? (@.a == &quot;x&apos;&quot;)&apos;) = ?. Expected &quot; char</ServiceException></ServiceExceptionReport>

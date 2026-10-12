@@ -1,0 +1,1 @@
+{"template-id":"CVE-2026-76904","info":{"author":null,"tags":null,"severity":""},"type":"http","host":"127.0.0.1","port":"8080","scheme":"http","url":"http://127.0.0.1:8080/geoserver","path":"/geoserver","ip":"127.0.0.1","timestamp":"2026-10-13T00:09:51.019752807+05:30","matcher-status":false}

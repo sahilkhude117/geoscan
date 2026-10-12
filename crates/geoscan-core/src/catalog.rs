@@ -49,7 +49,7 @@ pub struct SourcedDate {
     pub source: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct CvssRating {
     pub score: f64,
