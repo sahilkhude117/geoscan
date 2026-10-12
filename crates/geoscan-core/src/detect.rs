@@ -4,7 +4,7 @@ use reqwest::{Client, StatusCode, Url};
 use roxmltree::Document;
 use serde_json::Value;
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct Detection {
     pub target: String,
     pub reachable: bool,

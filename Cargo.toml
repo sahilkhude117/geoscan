@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/geoscan-core", "crates/geoscan"]
+members = ["crates/geoscan-core", "crates/geoscan", "crates/geoscan-api"]
 resolver = "2"
 
 [workspace.package]
@@ -8,9 +8,9 @@ edition = "2024"
 publish = false
 
 [workspace.dependencies]
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", features = ["derive", "env"] }
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time", "net", "signal", "sync"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 roxmltree = "0.20"
 serde_json = "1"
@@ -18,3 +18,5 @@ serde = { version = "1", features = ["derive"] }
 semver = "1"
 tempfile = "3"
 console = { version = "0.15.11", default-features = false, features = ["unicode-width", "ansi-parsing"] }
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"] }
+tower = { version = "0.5", features = ["util"] }

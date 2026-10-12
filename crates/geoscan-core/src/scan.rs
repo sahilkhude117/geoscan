@@ -19,6 +19,9 @@ pub use sqli::{DEFAULT_LAYER, DEFAULT_PROPERTY, SqliTarget};
 const REST_CHECK: &str = "CVE-2025-27505";
 const SQLI_CHECK: &str = "CVE-2026-76904";
 const CHECK_IDS: [&str; 2] = [REST_CHECK, SQLI_CHECK];
+
+/// Implemented checks; catalogue entries alone do not imply scan coverage.
+pub const SUPPORTED_CHECKS: &[&str] = &CHECK_IDS;
 const REST_TEMPLATE: &str = include_str!("../templates/http/cves/2025/CVE-2025-27505.yaml");
 const SQLI_TEMPLATE: &str = include_str!("../templates/http/cves/2026/CVE-2026-76904.yaml");
 
@@ -388,6 +391,15 @@ async fn open_database(path: &Path) -> Result<SqliteConnection, String> {
     Ok(db)
 }
 
+/// Initialize the shared schema so a new API instance can serve empty history.
+pub async fn initialize_database(path: &Path) -> Result<(), String> {
+    open_database(path)
+        .await?
+        .close()
+        .await
+        .map_err(|error| error.to_string())
+}
+
 async fn save_completed(
     db: &mut SqliteConnection,
     report: &ScanReport,
@@ -490,6 +502,19 @@ pub async fn scan_geoserver(
     auth: Option<(&str, &str)>,
     selected: &SqliTarget,
 ) -> Result<ScanReport, String> {
+    scan_geoserver_tracked(target, executable, database, auth, selected, None).await
+}
+
+/// The optional sender exposes the persisted scan ID to the background-job API.
+/// The ordinary CLI uses the same runner without a sender.
+pub async fn scan_geoserver_tracked(
+    target: &str,
+    executable: &Path,
+    database: &Path,
+    auth: Option<(&str, &str)>,
+    selected: &SqliTarget,
+    started: Option<tokio::sync::oneshot::Sender<i64>>,
+) -> Result<ScanReport, String> {
     let catalogue = load_catalog()?;
 
     for check_id in CHECK_IDS {
@@ -525,6 +550,10 @@ pub async fn scan_geoserver(
     .await
     .map_err(|e| e.to_string())?
     .last_insert_rowid();
+
+    if let Some(started) = started {
+        let _ = started.send(id);
+    }
 
     let result: Result<ScanReport, String> = async {
         let mut checks = Vec::new();

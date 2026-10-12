@@ -1,4 +1,4 @@
-//! Shared backend functions. Both the CLI and a future web API can use this crate.
+//! Shared scanner, storage and background jobs used by the CLI and HTTP API.
 
 use std::{path::Path, time::Duration};
 
@@ -81,3 +81,4 @@ pub async fn check_database(path: &Path) -> Result<(), sqlx::Error> {
 pub mod catalog;
 pub mod detect;
 pub mod scan;
+pub mod web;

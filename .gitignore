@@ -5,3 +5,5 @@
 *.db-wal
 .env
 __pycache__/
+.env.*
+!.env.example
